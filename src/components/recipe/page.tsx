@@ -1,5 +1,6 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
     RecipeDetailsHeader,
     RecipeHeroImage,
@@ -11,10 +12,16 @@ import {
     NutritionalInfo,
     StartCookingButton,
 } from "./";
-import BottomNavigation from "../home/BottomNavigation";
+import AppLayout from "@/components/layout/AppLayout";
 
-export default function RecipeDetails() {
-    const [activeTab, setActiveTab] = useState("home");
+interface RecipeDetailsPageProps {
+    recipeId: string;
+}
+
+export default function RecipeDetailsPage({
+    recipeId,
+}: RecipeDetailsPageProps) {
+    const router = useRouter();
 
     const handleToggleFavorite = () => {
         alert("Recipe added to favorites!");
@@ -25,9 +32,7 @@ export default function RecipeDetails() {
     };
 
     const handleBack = () => {
-        // This can be customized later for specific navigation logic
-        console.log("Navigating back from recipe details");
-        window.history.back();
+        router.back();
     };
 
     // Recipe data
@@ -91,7 +96,7 @@ export default function RecipeDetails() {
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-gray-50">
+        <AppLayout showBottomNav={false}>
             <div className="w-full max-w-2xl mx-auto bg-white shadow-lg min-h-screen flex flex-col">
                 <RecipeDetailsHeader onBack={handleBack} />
 
@@ -124,12 +129,7 @@ export default function RecipeDetails() {
                         />
                     </div>
                 </div>
-
-                <BottomNavigation
-                    activeTab={activeTab}
-                    setActiveTab={setActiveTab}
-                />
             </div>
-        </div>
+        </AppLayout>
     );
 }

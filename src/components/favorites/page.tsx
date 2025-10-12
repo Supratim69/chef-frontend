@@ -1,10 +1,11 @@
 "use client";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { FavoritesHeader, FavoriteRecipesList } from "./";
-import BottomNavigation from "../home/BottomNavigation";
+import AppLayout from "@/components/layout/AppLayout";
 
-export default function ChefFavorites() {
-    const [activeTab, setActiveTab] = useState("favorites");
+export default function FavoritesPage() {
+    const router = useRouter();
 
     const recipes = [
         {
@@ -41,12 +42,12 @@ export default function ChefFavorites() {
         },
     ];
 
-    const handleViewRecipe = (title: string) => {
-        alert(`Opening recipe: ${title}`);
+    const handleViewRecipe = (recipeId: number) => {
+        router.push(`/recipe/${recipeId}`);
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-gray-50">
+        <AppLayout>
             <div className="w-full max-w-2xl mx-auto bg-white shadow-lg min-h-screen flex flex-col">
                 <FavoritesHeader />
 
@@ -54,12 +55,7 @@ export default function ChefFavorites() {
                     recipes={recipes}
                     onViewRecipe={handleViewRecipe}
                 />
-
-                <BottomNavigation
-                    activeTab={activeTab}
-                    setActiveTab={setActiveTab}
-                />
             </div>
-        </div>
+        </AppLayout>
     );
 }

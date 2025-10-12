@@ -11,7 +11,7 @@ interface Recipe {
 
 interface FavoriteRecipesListProps {
     recipes: Recipe[];
-    onViewRecipe: (title: string) => void;
+    onViewRecipe: (recipeId: number) => void;
 }
 
 const FavoriteRecipesList: React.FC<FavoriteRecipesListProps> = ({
@@ -19,7 +19,7 @@ const FavoriteRecipesList: React.FC<FavoriteRecipesListProps> = ({
     onViewRecipe,
 }) => {
     return (
-        <div className="flex-1 overflow-y-auto px-6 py-6 pb-24">
+        <div className="flex-1 overflow-y-auto px-6 py-6">
             {recipes.map((recipe) => (
                 <RecipeCard
                     key={recipe.id}

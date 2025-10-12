@@ -12,7 +12,7 @@ interface Recipe {
 
 interface RecipeCardProps {
     recipe: Recipe;
-    onViewRecipe: (title: string) => void;
+    onViewRecipe: (recipeId: number) => void;
 }
 
 const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onViewRecipe }) => {
@@ -51,7 +51,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onViewRecipe }) => {
 
                     {/* View Recipe Button */}
                     <button
-                        onClick={() => onViewRecipe(recipe.title)}
+                        onClick={() => onViewRecipe(recipe.id)}
                         className="w-full bg-cyan-400 text-white py-3 rounded-xl font-semibold hover:bg-cyan-500 transition-colors"
                     >
                         View Recipe

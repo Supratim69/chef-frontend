@@ -1,5 +1,9 @@
+"use client";
+
 import React from "react";
 import { Heart, Home, User } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 
 interface BottomNavigationProps {
     activeTab: string;
@@ -10,11 +14,28 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({
     activeTab,
     setActiveTab,
 }) => {
+    const { isAuthenticated } = useAuth();
+    const router = useRouter();
+
+    const handleProtectedNavigation = (tab: string, path: string) => {
+        if (!isAuthenticated) {
+            router.push(`/login?redirect=${encodeURIComponent(path)}`);
+        } else {
+            setActiveTab(tab);
+            router.push(path);
+        }
+    };
+
+    const handleHomeNavigation = () => {
+        setActiveTab("home");
+        router.push("/");
+    };
+
     return (
-        <div className="border-t border-gray-200 bg-white mt-auto">
+        <div className="border-t border-gray-200 bg-white shadow-lg">
             <div className="flex justify-around py-2">
                 <button
-                    onClick={() => setActiveTab("home")}
+                    onClick={handleHomeNavigation}
                     className="flex flex-col items-center gap-1 px-6 py-2 hover:bg-gray-50 transition-colors"
                 >
                     <Home
@@ -35,7 +56,9 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({
                     </span>
                 </button>
                 <button
-                    onClick={() => setActiveTab("favorites")}
+                    onClick={() =>
+                        handleProtectedNavigation("favorites", "/favorites")
+                    }
                     className="flex flex-col items-center gap-1 px-6 py-2 hover:bg-gray-50 transition-colors"
                 >
                     <Heart
@@ -56,7 +79,9 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({
                     </span>
                 </button>
                 <button
-                    onClick={() => setActiveTab("profile")}
+                    onClick={() =>
+                        handleProtectedNavigation("profile", "/profile")
+                    }
                     className="flex flex-col items-center gap-1 px-6 py-2 hover:bg-gray-50 transition-colors"
                 >
                     <User

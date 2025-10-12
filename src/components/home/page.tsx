@@ -1,14 +1,15 @@
 "use client";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import Header from "./Header";
 import SearchInput from "./SearchInput";
 import IngredientsInput from "./IngredientsInput";
 import ActionButtons from "./ActionButtons";
 import CategoryGrid from "./CategoryGrid";
 import RecipeList from "./RecipeList";
-import BottomNavigation from "./BottomNavigation";
+import AppLayout from "@/components/layout/AppLayout";
 
-export default function ChefAIApp() {
+export default function HomePage() {
     const [ingredientInput, setIngredientInput] = useState("");
     const [ingredients, setIngredients] = useState([
         "Chicken Breast",
@@ -23,7 +24,7 @@ export default function ChefAIApp() {
         glutenFree: false,
         dairyFree: false,
     });
-    const [activeTab, setActiveTab] = useState("home");
+    const router = useRouter();
 
     const addIngredient = () => {
         if (ingredientInput.trim()) {
@@ -56,7 +57,15 @@ export default function ChefAIApp() {
             alert("Please add at least one ingredient!");
             return;
         }
-        alert(`Searching recipes with: ${ingredients.join(", ")}`);
+        // Navigate to search results page with ingredients as query params
+        const searchParams = new URLSearchParams({
+            ingredients: ingredients.join(","),
+            dietary: Object.entries(dietaryPrefs)
+                .filter(([_, value]) => value)
+                .map(([key, _]) => key)
+                .join(","),
+        });
+        router.push(`/search?${searchParams.toString()}`);
     };
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -99,7 +108,7 @@ export default function ChefAIApp() {
     ];
 
     return (
-        <div className="flex flex-col min-h-screen bg-gray-50">
+        <AppLayout>
             <div className="w-full max-w-2xl mx-auto bg-white shadow-lg min-h-screen flex flex-col">
                 <Header />
                 <SearchInput
@@ -109,7 +118,7 @@ export default function ChefAIApp() {
                 />
 
                 {/* Main Content - Scrollable */}
-                <div className="flex-1 overflow-y-auto px-6 pb-20">
+                <div className="flex-1 overflow-y-auto px-6">
                     <IngredientsInput
                         ingredientInput={ingredientInput}
                         setIngredientInput={setIngredientInput}
@@ -130,12 +139,7 @@ export default function ChefAIApp() {
 
                     <RecipeList recipes={recipes} />
                 </div>
-
-                <BottomNavigation
-                    activeTab={activeTab}
-                    setActiveTab={setActiveTab}
-                />
             </div>
-        </div>
+        </AppLayout>
     );
 }

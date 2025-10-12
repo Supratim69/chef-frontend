@@ -1,10 +1,10 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { SearchResultsHeader, RecipeGrid } from "./";
-import BottomNavigation from "../home/BottomNavigation";
+import AppLayout from "@/components/layout/AppLayout";
 
-export default function SearchResults() {
-    const [activeTab, setActiveTab] = useState("home");
+export default function SearchResultsPage() {
     const [favorites, setFavorites] = useState([
         false,
         false,
@@ -13,6 +13,23 @@ export default function SearchResults() {
         false,
         false,
     ]);
+    const [searchIngredients, setSearchIngredients] = useState<string[]>([]);
+    const [dietaryPrefs, setDietaryPrefs] = useState<string[]>([]);
+
+    const router = useRouter();
+    const searchParams = useSearchParams();
+
+    useEffect(() => {
+        const ingredients = searchParams.get("ingredients");
+        const dietary = searchParams.get("dietary");
+
+        if (ingredients) {
+            setSearchIngredients(ingredients.split(","));
+        }
+        if (dietary) {
+            setDietaryPrefs(dietary.split(","));
+        }
+    }, [searchParams]);
 
     const toggleFavorite = (index: number) => {
         const newFavorites = [...favorites];
@@ -21,8 +38,7 @@ export default function SearchResults() {
     };
 
     const handleBack = () => {
-        console.log("Navigating back from search results");
-        window.history.back();
+        router.back();
     };
 
     const handleRecipeClick = (recipe: {
@@ -33,8 +49,7 @@ export default function SearchResults() {
         tags: string[];
         image: string;
     }) => {
-        console.log("Recipe clicked:", recipe);
-        // Navigation to recipe details can be implemented later
+        router.push(`/recipe/${recipe.id}`);
     };
 
     const recipes = [
@@ -89,9 +104,13 @@ export default function SearchResults() {
     ];
 
     return (
-        <div className="flex flex-col min-h-screen bg-gray-50">
+        <AppLayout showBottomNav={false}>
             <div className="w-full max-w-2xl mx-auto bg-white shadow-lg min-h-screen flex flex-col">
-                <SearchResultsHeader onBack={handleBack} />
+                <SearchResultsHeader
+                    onBack={handleBack}
+                    searchIngredients={searchIngredients}
+                    dietaryPrefs={dietaryPrefs}
+                />
 
                 <RecipeGrid
                     recipes={recipes}
@@ -99,12 +118,7 @@ export default function SearchResults() {
                     onToggleFavorite={toggleFavorite}
                     onRecipeClick={handleRecipeClick}
                 />
-
-                <BottomNavigation
-                    activeTab={activeTab}
-                    setActiveTab={setActiveTab}
-                />
             </div>
-        </div>
+        </AppLayout>
     );
 }
