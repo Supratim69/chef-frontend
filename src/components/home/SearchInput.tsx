@@ -18,7 +18,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                     type="text"
-                    placeholder="Enter ingredients..."
+                    placeholder="Enter recipe name..."
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
                     onKeyPress={onKeyPress}

@@ -25,7 +25,7 @@ export default function Navigation() {
                             href="/"
                             className="text-xl font-bold text-orange-600"
                         >
-                            Recipe Finder
+                            Chef
                         </Link>
                     </div>
 

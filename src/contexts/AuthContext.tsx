@@ -1,20 +1,17 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-
-interface User {
-    id: string;
-    email: string;
-    name?: string;
-}
+import { authClient } from "../lib/auth-client";
+import type { User } from "../types/api";
 
 interface AuthContextType {
     user: User | null;
     isLoading: boolean;
     login: (email: string, password: string) => Promise<void>;
     signup: (email: string, password: string, name: string) => Promise<void>;
-    logout: () => void;
+    logout: () => Promise<void>;
     isAuthenticated: boolean;
+    refreshSession: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,17 +20,69 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
+    const refreshSession = async () => {
+        try {
+            // Make direct API call to get session
+            const response = await fetch(
+                `${
+                    process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+                }/api/auth/session`,
+                {
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+
+            if (response.ok) {
+                const session = await response.json();
+                if (session.user) {
+                    // Convert BetterAuth user to our User type
+                    const betterAuthUser = session.user;
+                    const user: User = {
+                        id: betterAuthUser.id,
+                        name: betterAuthUser.name,
+                        email: betterAuthUser.email,
+                        emailVerified: betterAuthUser.emailVerified,
+                        image: betterAuthUser.image,
+                        createdAt: betterAuthUser.createdAt,
+                        updatedAt: betterAuthUser.updatedAt,
+                    };
+                    setUser(user);
+                    // Backup for development
+                    localStorage.setItem("auth-backup", JSON.stringify(user));
+                } else {
+                    // No session found
+                    const backup = localStorage.getItem("auth-backup");
+                    if (backup) {
+                        setUser(JSON.parse(backup));
+                    } else {
+                        setUser(null);
+                    }
+                }
+            } else {
+                // API call failed, try backup
+                const backup = localStorage.getItem("auth-backup");
+                if (backup) {
+                    setUser(JSON.parse(backup));
+                } else {
+                    setUser(null);
+                }
+            }
+        } catch (error) {
+            console.error("Session refresh failed:", error);
+            setUser(null);
+        }
+    };
+
     useEffect(() => {
-        // Check for existing session in localStorage
+        // Check for existing session on mount
         const checkAuth = async () => {
             try {
-                const storedUser = localStorage.getItem("user");
-                if (storedUser) {
-                    setUser(JSON.parse(storedUser));
-                }
+                await refreshSession();
             } catch (error) {
                 console.error("Auth check failed:", error);
-                localStorage.removeItem("user");
             } finally {
                 setIsLoading(false);
             }
@@ -45,15 +94,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const login = async (email: string, password: string) => {
         setIsLoading(true);
         try {
-            // Placeholder for actual login logic
-            // const response = await auth.signIn.email({ email, password });
+            const response = await authClient.signIn.email({
+                email,
+                password,
+            });
 
-            // Mock successful login for now
-            const mockUser = { id: "1", email, name: "User" };
-            setUser(mockUser);
+            if (response.error) {
+                throw new Error(response.error.message || "Login failed");
+            }
 
-            // Store in localStorage for persistence (temporary solution)
-            localStorage.setItem("user", JSON.stringify(mockUser));
+            if (response.data?.user) {
+                // Convert BetterAuth user to our User type
+                const betterAuthUser = response.data.user;
+                const user: User = {
+                    id: betterAuthUser.id,
+                    name: betterAuthUser.name,
+                    email: betterAuthUser.email,
+                    emailVerified: betterAuthUser.emailVerified,
+                    image: betterAuthUser.image,
+                    createdAt: betterAuthUser.createdAt,
+                    updatedAt: betterAuthUser.updatedAt,
+                };
+                setUser(user);
+                // Backup for development
+                localStorage.setItem("auth-backup", JSON.stringify(user));
+            }
         } catch (error) {
             console.error("Login failed:", error);
             throw error;
@@ -65,15 +130,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const signup = async (email: string, password: string, name: string) => {
         setIsLoading(true);
         try {
-            // Placeholder for actual signup logic
-            // const response = await auth.signUp.email({ email, password, name });
+            const response = await authClient.signUp.email({
+                email,
+                password,
+                name,
+            });
 
-            // Mock successful signup for now
-            const mockUser = { id: Date.now().toString(), email, name };
-            setUser(mockUser);
+            if (response.error) {
+                throw new Error(response.error.message || "Signup failed");
+            }
 
-            // Store in localStorage for persistence (temporary solution)
-            localStorage.setItem("user", JSON.stringify(mockUser));
+            if (response.data?.user) {
+                // Convert BetterAuth user to our User type
+                const betterAuthUser = response.data.user;
+                const user: User = {
+                    id: betterAuthUser.id,
+                    name: betterAuthUser.name,
+                    email: betterAuthUser.email,
+                    emailVerified: betterAuthUser.emailVerified,
+                    image: betterAuthUser.image,
+                    createdAt: betterAuthUser.createdAt,
+                    updatedAt: betterAuthUser.updatedAt,
+                };
+                setUser(user);
+            }
         } catch (error) {
             console.error("Signup failed:", error);
             throw error;
@@ -82,11 +162,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
-    const logout = () => {
-        setUser(null);
-        localStorage.removeItem("user");
-        // Redirect to home page
-        window.location.href = "/";
+    const logout = async () => {
+        try {
+            await authClient.signOut();
+            setUser(null);
+            // Clear backup
+            localStorage.removeItem("auth-backup");
+            // Redirect to home page
+            window.location.href = "/";
+        } catch (error) {
+            console.error("Logout failed:", error);
+            // Force logout on client side even if server request fails
+            setUser(null);
+            localStorage.removeItem("auth-backup");
+            window.location.href = "/";
+        }
     };
 
     const value = {
@@ -96,6 +186,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signup,
         logout,
         isAuthenticated: !!user,
+        refreshSession,
     };
 
     return (

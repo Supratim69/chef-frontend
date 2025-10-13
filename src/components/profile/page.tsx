@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import {
     ProfileHeader,
     UserProfileSection,
@@ -10,13 +10,46 @@ import AppLayout from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function ProfilePage() {
-    const { user, logout } = useAuth();
+    const { user, logout, isLoading } = useAuth();
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
         if (window.confirm("Are you sure you want to log out?")) {
-            logout();
+            await logout();
         }
     };
+
+    if (isLoading) {
+        return (
+            <AppLayout>
+                <div className="w-full max-w-2xl mx-auto bg-white shadow-lg min-h-screen flex flex-col">
+                    <ProfileHeader />
+                    <div className="flex-1 flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500"></div>
+                    </div>
+                </div>
+            </AppLayout>
+        );
+    }
+
+    if (!user) {
+        return (
+            <AppLayout>
+                <div className="w-full max-w-2xl mx-auto bg-white shadow-lg min-h-screen flex flex-col">
+                    <ProfileHeader />
+                    <div className="flex-1 flex items-center justify-center">
+                        <div className="text-center">
+                            <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                                Not Authenticated
+                            </h2>
+                            <p className="text-gray-600">
+                                Please log in to view your profile.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </AppLayout>
+        );
+    }
 
     return (
         <AppLayout>
@@ -26,9 +59,9 @@ export default function ProfilePage() {
                 {/* Main Content - Scrollable */}
                 <div className="flex-1 overflow-y-auto px-6">
                     <UserProfileSection
-                        name={user?.name || "User"}
-                        email={user?.email || "user@example.com"}
-                        avatarUrl="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&h=300&fit=crop"
+                        name={user.name}
+                        email={user.email}
+                        avatarUrl={user.image}
                     />
 
                     <ProfileMenuItems />

@@ -10,7 +10,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-    title: "Recipe Finder",
+    title: "Chef",
     description: "Find recipes based on your ingredients",
 };
 

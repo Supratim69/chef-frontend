@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Header from "./Header";
 import SearchInput from "./SearchInput";
@@ -10,26 +10,199 @@ import RecipeList from "./RecipeList";
 import AppLayout from "@/components/layout/AppLayout";
 
 export default function HomePage() {
+    const [recipeSearchInput, setRecipeSearchInput] = useState("");
     const [ingredientInput, setIngredientInput] = useState("");
-    const [ingredients, setIngredients] = useState([
-        "Chicken Breast",
-        "Broccoli Florets",
-        "Cherry Tomatoes",
-        "Garlic",
-        "Olive Oil",
-    ]);
+    const [ingredients, setIngredients] = useState<string[]>([]);
     const [dietaryPrefs, setDietaryPrefs] = useState({
+        vegan: false,
         veg: false,
         nonVeg: false,
         glutenFree: false,
-        dairyFree: false,
     });
     const router = useRouter();
 
+    // Load ingredients and dietary preferences from localStorage on component mount
+    useEffect(() => {
+        try {
+            const savedIngredients = localStorage.getItem("recipe-ingredients");
+            const savedDietaryPrefs = localStorage.getItem(
+                "recipe-dietary-prefs"
+            );
+
+            if (savedIngredients) {
+                const parsedIngredients = JSON.parse(savedIngredients);
+                if (Array.isArray(parsedIngredients)) {
+                    setIngredients(parsedIngredients);
+                }
+            }
+
+            if (savedDietaryPrefs) {
+                const parsedPrefs = JSON.parse(savedDietaryPrefs);
+                if (typeof parsedPrefs === "object" && parsedPrefs !== null) {
+                    setDietaryPrefs((prevPrefs) => ({
+                        ...prevPrefs,
+                        ...parsedPrefs,
+                    }));
+                }
+            }
+        } catch (error) {
+            console.error(
+                "Failed to load saved data from localStorage:",
+                error
+            );
+        }
+    }, []);
+
+    // Save ingredients to localStorage whenever they change
+    useEffect(() => {
+        try {
+            localStorage.setItem(
+                "recipe-ingredients",
+                JSON.stringify(ingredients)
+            );
+        } catch (error) {
+            console.error("Failed to save ingredients to localStorage:", error);
+        }
+    }, [ingredients]);
+
+    // Save dietary preferences to localStorage whenever they change
+    useEffect(() => {
+        try {
+            localStorage.setItem(
+                "recipe-dietary-prefs",
+                JSON.stringify(dietaryPrefs)
+            );
+        } catch (error) {
+            console.error(
+                "Failed to save dietary preferences to localStorage:",
+                error
+            );
+        }
+    }, [dietaryPrefs]);
+
     const addIngredient = () => {
-        if (ingredientInput.trim()) {
-            setIngredients([...ingredients, ingredientInput.trim()]);
+        const trimmedInput = ingredientInput.trim();
+        if (trimmedInput) {
+            // Parse comma-separated ingredients using regex
+            const ingredientList = trimmedInput
+                .split(/,\s*/) // Split by comma with optional whitespace
+                .map((ingredient) => ingredient.trim()) // Trim each ingredient
+                .filter((ingredient) => ingredient.length > 0); // Remove empty strings
+
+            const newIngredients: string[] = [];
+            const duplicates: string[] = [];
+
+            // Check each ingredient for duplicates
+            ingredientList.forEach((ingredient) => {
+                const isDuplicate = ingredients.some(
+                    (existing) =>
+                        existing.toLowerCase() === ingredient.toLowerCase()
+                );
+
+                if (isDuplicate) {
+                    duplicates.push(ingredient);
+                } else {
+                    // Also check against other new ingredients to avoid duplicates within the same input
+                    const isDuplicateInNew = newIngredients.some(
+                        (newIngredient) =>
+                            newIngredient.toLowerCase() ===
+                            ingredient.toLowerCase()
+                    );
+
+                    if (!isDuplicateInNew) {
+                        newIngredients.push(ingredient);
+                    }
+                }
+            });
+
+            // Add new ingredients to the list
+            if (newIngredients.length > 0) {
+                setIngredients([...ingredients, ...newIngredients]);
+            }
+
+            // Show feedback to user
+            if (newIngredients.length > 0 && duplicates.length > 0) {
+                console.log(
+                    `Added ${newIngredients.length} ingredient(s). ${
+                        duplicates.length
+                    } ingredient(s) were already in the list: ${duplicates.join(
+                        ", "
+                    )}`
+                );
+            } else if (newIngredients.length > 0) {
+                if (newIngredients.length === 1) {
+                    // Single ingredient added - no special message needed
+                } else {
+                    console.log(
+                        `Added ${
+                            newIngredients.length
+                        } ingredients: ${newIngredients.join(", ")}`
+                    );
+                }
+            } else if (duplicates.length > 0) {
+                alert(
+                    `All ingredients are already in the list: ${duplicates.join(
+                        ", "
+                    )}`
+                );
+            }
+
             setIngredientInput("");
+        }
+    };
+
+    const addMultipleIngredients = (ingredientList: string[]) => {
+        const newIngredients: string[] = [];
+        const duplicates: string[] = [];
+
+        // Check each ingredient for duplicates
+        ingredientList.forEach((ingredient) => {
+            const isDuplicate = ingredients.some(
+                (existing) =>
+                    existing.toLowerCase() === ingredient.toLowerCase()
+            );
+
+            if (isDuplicate) {
+                duplicates.push(ingredient);
+            } else {
+                // Also check against other new ingredients to avoid duplicates within the same input
+                const isDuplicateInNew = newIngredients.some(
+                    (newIngredient) =>
+                        newIngredient.toLowerCase() === ingredient.toLowerCase()
+                );
+
+                if (!isDuplicateInNew) {
+                    newIngredients.push(ingredient);
+                }
+            }
+        });
+
+        // Add new ingredients to the list
+        if (newIngredients.length > 0) {
+            setIngredients([...ingredients, ...newIngredients]);
+        }
+
+        // Show feedback to user (always show for batch operations like image upload)
+        if (newIngredients.length > 0 && duplicates.length > 0) {
+            console.log(
+                `Added ${newIngredients.length} ingredient(s). ${
+                    duplicates.length
+                } ingredient(s) were already in the list: ${duplicates.join(
+                    ", "
+                )}`
+            );
+        } else if (newIngredients.length > 0) {
+            console.log(
+                `Successfully added ${
+                    newIngredients.length
+                } ingredient(s): ${newIngredients.join(", ")}`
+            );
+        } else if (duplicates.length > 0) {
+            alert(
+                `All ingredients are already in the list: ${duplicates.join(
+                    ", "
+                )}`
+            );
         }
     };
 
@@ -45,11 +218,19 @@ export default function HomePage() {
         setIngredients([]);
         setIngredientInput("");
         setDietaryPrefs({
+            vegan: false,
             veg: false,
             nonVeg: false,
             glutenFree: false,
-            dairyFree: false,
         });
+
+        // Clear from localStorage as well
+        try {
+            localStorage.removeItem("recipe-ingredients");
+            localStorage.removeItem("recipe-dietary-prefs");
+        } catch (error) {
+            console.error("Failed to clear localStorage:", error);
+        }
     };
 
     const handleSearch = () => {
@@ -68,9 +249,26 @@ export default function HomePage() {
         router.push(`/search?${searchParams.toString()}`);
     };
 
-    const handleKeyPress = (e: React.KeyboardEvent) => {
+    const handleIngredientKeyPress = (e: React.KeyboardEvent) => {
         if (e.key === "Enter") {
             addIngredient();
+        }
+    };
+
+    const handleRecipeSearchKeyPress = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter") {
+            handleRecipeSearch();
+        }
+    };
+
+    const handleRecipeSearch = () => {
+        if (recipeSearchInput.trim()) {
+            // Navigate to recipe search results
+            const searchParams = new URLSearchParams({
+                q: recipeSearchInput.trim(),
+                type: "recipe",
+            });
+            router.push(`/search?${searchParams.toString()}`);
         }
     };
 
@@ -112,9 +310,9 @@ export default function HomePage() {
             <div className="w-full max-w-2xl mx-auto bg-white shadow-lg min-h-screen flex flex-col">
                 <Header />
                 <SearchInput
-                    value={ingredientInput}
-                    onChange={setIngredientInput}
-                    onKeyPress={handleKeyPress}
+                    value={recipeSearchInput}
+                    onChange={setRecipeSearchInput}
+                    onKeyPress={handleRecipeSearchKeyPress}
                 />
 
                 {/* Main Content - Scrollable */}
@@ -124,10 +322,11 @@ export default function HomePage() {
                         setIngredientInput={setIngredientInput}
                         ingredients={ingredients}
                         addIngredient={addIngredient}
+                        addMultipleIngredients={addMultipleIngredients}
                         removeIngredient={removeIngredient}
                         dietaryPrefs={dietaryPrefs}
                         toggleDietaryPref={toggleDietaryPref}
-                        handleKeyPress={handleKeyPress}
+                        handleKeyPress={handleIngredientKeyPress}
                     />
 
                     <ActionButtons
