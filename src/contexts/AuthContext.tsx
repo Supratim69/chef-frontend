@@ -12,6 +12,7 @@ interface AuthContextType {
     user: User | null;
     isLoading: boolean;
     login: (email: string, password: string) => Promise<void>;
+    signup: (email: string, password: string, name: string) => Promise<void>;
     logout: () => void;
     isAuthenticated: boolean;
 }
@@ -61,6 +62,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const signup = async (email: string, password: string, name: string) => {
+        setIsLoading(true);
+        try {
+            // Placeholder for actual signup logic
+            // const response = await auth.signUp.email({ email, password, name });
+
+            // Mock successful signup for now
+            const mockUser = { id: Date.now().toString(), email, name };
+            setUser(mockUser);
+
+            // Store in localStorage for persistence (temporary solution)
+            localStorage.setItem("user", JSON.stringify(mockUser));
+        } catch (error) {
+            console.error("Signup failed:", error);
+            throw error;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const logout = () => {
         setUser(null);
         localStorage.removeItem("user");
@@ -72,6 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         isLoading,
         login,
+        signup,
         logout,
         isAuthenticated: !!user,
     };
