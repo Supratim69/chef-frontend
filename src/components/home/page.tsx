@@ -2,15 +2,16 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Header from "./Header";
-import SearchInput from "./SearchInput";
+
 import IngredientsInput from "./IngredientsInput";
 import ActionButtons from "./ActionButtons";
 import CategoryGrid from "./CategoryGrid";
 import RecipeList from "./RecipeList";
 import AppLayout from "@/components/layout/AppLayout";
+import { apiClient } from "@/lib/api-client";
+import { analytics } from "@/lib/analytics";
 
 export default function HomePage() {
-    const [recipeSearchInput, setRecipeSearchInput] = useState("");
     const [ingredientInput, setIngredientInput] = useState("");
     const [ingredients, setIngredients] = useState<string[]>([]);
     const [dietaryPrefs, setDietaryPrefs] = useState({
@@ -19,6 +20,7 @@ export default function HomePage() {
         nonVeg: false,
         glutenFree: false,
     });
+    const [isSearching, setIsSearching] = useState(false);
     const router = useRouter();
 
     // Load ingredients and dietary preferences from localStorage on component mount
@@ -117,7 +119,16 @@ export default function HomePage() {
 
             // Add new ingredients to the list
             if (newIngredients.length > 0) {
-                setIngredients([...ingredients, ...newIngredients]);
+                const updatedIngredients = [...ingredients, ...newIngredients];
+                setIngredients(updatedIngredients);
+
+                // Track ingredient additions
+                newIngredients.forEach((ingredient) => {
+                    analytics.trackIngredientAdd(
+                        ingredient,
+                        updatedIngredients.length
+                    );
+                });
             }
 
             // Show feedback to user
@@ -179,7 +190,11 @@ export default function HomePage() {
 
         // Add new ingredients to the list
         if (newIngredients.length > 0) {
-            setIngredients([...ingredients, ...newIngredients]);
+            const updatedIngredients = [...ingredients, ...newIngredients];
+            setIngredients(updatedIngredients);
+
+            // Track image upload and ingredient extraction
+            analytics.trackImageUpload(newIngredients);
         }
 
         // Show feedback to user (always show for batch operations like image upload)
@@ -211,7 +226,11 @@ export default function HomePage() {
     };
 
     const toggleDietaryPref = (pref: keyof typeof dietaryPrefs) => {
-        setDietaryPrefs({ ...dietaryPrefs, [pref]: !dietaryPrefs[pref] });
+        const newValue = !dietaryPrefs[pref];
+        setDietaryPrefs({ ...dietaryPrefs, [pref]: newValue });
+
+        // Track dietary preference changes
+        analytics.trackDietaryPrefChange(pref, newValue);
     };
 
     const clearAll = () => {
@@ -233,20 +252,84 @@ export default function HomePage() {
         }
     };
 
-    const handleSearch = () => {
+    const handleSearch = async () => {
         if (ingredients.length === 0) {
             alert("Please add at least one ingredient!");
             return;
         }
-        // Navigate to search results page with ingredients as query params
-        const searchParams = new URLSearchParams({
-            ingredients: ingredients.join(","),
-            dietary: Object.entries(dietaryPrefs)
+
+        setIsSearching(true);
+        try {
+            // Get selected dietary preferences
+            const selectedDietaryPrefs = Object.entries(dietaryPrefs)
                 .filter(([_, value]) => value)
-                .map(([key, _]) => key)
-                .join(","),
-        });
-        router.push(`/search?${searchParams.toString()}`);
+                .map(([key, _]) => key);
+
+            // Search recipes using the API (direct Pinecone search)
+            console.log(
+                "🔍 Home Page - Starting recipe search with ingredients:",
+                ingredients
+            );
+            console.log(
+                "🥗 Home Page - Dietary preferences:",
+                selectedDietaryPrefs
+            );
+            console.log(
+                "🚀 Home Page - Calling searchRecipesByIngredients API"
+            );
+
+            const searchResults = await apiClient.searchRecipesByIngredients(
+                ingredients,
+                selectedDietaryPrefs
+            );
+
+            console.log("📊 Home Page - Search API Response:", searchResults);
+            console.log(
+                "📈 Home Page - Number of results found:",
+                searchResults.length
+            );
+
+            // Log each result for debugging
+            searchResults.forEach((result, index) => {
+                console.log(`🍳 Home Page - Result ${index + 1}:`, {
+                    parentId: result.parentId,
+                    score: result.score,
+                    title: result.title,
+                    snippet: result.snippet,
+                });
+            });
+
+            // Navigate to search results page with the results
+            const searchParams = new URLSearchParams({
+                ingredients: ingredients.join(","),
+                dietary: selectedDietaryPrefs.join(","),
+            });
+
+            // Store search results in sessionStorage for the search page to use
+            console.log("💾 Home Page - Storing results in sessionStorage");
+            sessionStorage.setItem(
+                "searchResults",
+                JSON.stringify(searchResults)
+            );
+            sessionStorage.setItem("searchQuery", ingredients.join(", "));
+            console.log(
+                "✅ Home Page - Results stored, navigating to search page"
+            );
+
+            // Track recipe search
+            analytics.trackRecipeSearch(
+                ingredients,
+                selectedDietaryPrefs,
+                searchResults.length
+            );
+
+            router.push(`/search?${searchParams.toString()}`);
+        } catch (error) {
+            console.error("Search failed:", error);
+            alert("Search failed. Please try again.");
+        } finally {
+            setIsSearching(false);
+        }
     };
 
     const handleIngredientKeyPress = (e: React.KeyboardEvent) => {
@@ -255,68 +338,18 @@ export default function HomePage() {
         }
     };
 
-    const handleRecipeSearchKeyPress = (e: React.KeyboardEvent) => {
-        if (e.key === "Enter") {
-            handleRecipeSearch();
-        }
-    };
-
-    const handleRecipeSearch = () => {
-        if (recipeSearchInput.trim()) {
-            // Navigate to recipe search results
-            const searchParams = new URLSearchParams({
-                q: recipeSearchInput.trim(),
-                type: "recipe",
-            });
-            router.push(`/search?${searchParams.toString()}`);
-        }
-    };
-
-    const categories = [
-        {
-            name: "Vegetables",
-            image: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=300&h=200&fit=crop",
-        },
-        {
-            name: "Meat & Poultry",
-            image: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=300&h=200&fit=crop",
-        },
-        {
-            name: "Dairy & Cheese",
-            image: "https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=300&h=200&fit=crop",
-        },
-    ];
-
-    const recipes = [
-        {
-            name: "Creamy Tomato Pasta",
-            category: "Italian",
-            image: "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=200&h=200&fit=crop",
-        },
-        {
-            name: "Spicy Chicken Stir-fry",
-            category: "Asian",
-            image: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=200&h=200&fit=crop",
-        },
-        {
-            name: "Hearty Lentil Soup",
-            category: "Vegetarian",
-            image: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=200&h=200&fit=crop",
-        },
-    ];
-
     return (
         <AppLayout>
             <div className="w-full max-w-2xl mx-auto bg-white shadow-lg min-h-screen flex flex-col">
                 <Header />
-                <SearchInput
+                {/* <SearchInput
                     value={recipeSearchInput}
                     onChange={setRecipeSearchInput}
                     onKeyPress={handleRecipeSearchKeyPress}
-                />
+                /> */}
 
                 {/* Main Content - Scrollable */}
-                <div className="flex-1 overflow-y-auto px-6">
+                <div className="flex-1 overflow-y-auto px-6 py-2">
                     <IngredientsInput
                         ingredientInput={ingredientInput}
                         setIngredientInput={setIngredientInput}
@@ -332,11 +365,12 @@ export default function HomePage() {
                     <ActionButtons
                         handleSearch={handleSearch}
                         clearAll={clearAll}
+                        isSearching={isSearching}
                     />
 
-                    <CategoryGrid categories={categories} />
+                    {/* <CategoryGrid categories={categories} /> */}
 
-                    <RecipeList recipes={recipes} />
+                    {/* <RecipeList recipes={recipes} /> */}
                 </div>
             </div>
         </AppLayout>

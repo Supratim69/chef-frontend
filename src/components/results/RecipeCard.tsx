@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Heart, Clock, ChefHat } from "lucide-react";
 
 interface Recipe {
-    id: number;
+    id: string;
     title: string;
     time: string;
     difficulty: string;

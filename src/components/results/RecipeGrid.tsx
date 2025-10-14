@@ -2,7 +2,7 @@ import React from "react";
 import RecipeCard from "./RecipeCard";
 
 interface Recipe {
-    id: number;
+    id: string;
     title: string;
     time: string;
     difficulty: string;

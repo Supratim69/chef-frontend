@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { authClient } from "../lib/auth-client";
 import type { User } from "../types/api";
+import { analytics } from "../lib/analytics";
 
 interface AuthContextType {
     user: User | null;
@@ -118,6 +119,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setUser(user);
                 // Backup for development
                 localStorage.setItem("auth-backup", JSON.stringify(user));
+
+                // Track successful login
+                analytics.trackAuth("sign_in");
             }
         } catch (error) {
             console.error("Login failed:", error);
@@ -153,6 +157,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     updatedAt: betterAuthUser.updatedAt,
                 };
                 setUser(user);
+
+                // Track successful signup
+                analytics.trackAuth("sign_up");
             }
         } catch (error) {
             console.error("Signup failed:", error);
@@ -168,6 +175,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(null);
             // Clear backup
             localStorage.removeItem("auth-backup");
+
+            // Track successful logout
+            analytics.trackAuth("sign_out");
+
             // Redirect to home page
             window.location.href = "/";
         } catch (error) {

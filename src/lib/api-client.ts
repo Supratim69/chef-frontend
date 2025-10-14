@@ -9,6 +9,8 @@ import type {
     FavoritesResponse,
     ApiResponse,
     ApiError,
+    SearchResult,
+    SearchResponse,
 } from "../types/api";
 
 class ApiClient {
@@ -20,16 +22,30 @@ class ApiClient {
     }
 
     private async handleResponse<T>(response: Response): Promise<T> {
+        console.log(
+            `🌐 API Client - Response status: ${response.status} ${response.statusText}`
+        );
+
         if (!response.ok) {
             const errorData: ApiError = await response.json().catch(() => ({
                 error: "network_error",
                 message: "Network request failed",
                 statusCode: response.status,
             }));
-            throw new Error(errorData.message || "Request failed");
+
+            console.error(
+                `❌ API Client - HTTP Error ${response.status}:`,
+                errorData
+            );
+            throw new Error(
+                errorData.message ||
+                    `Request failed with status ${response.status}`
+            );
         }
 
-        return response.json();
+        const responseData = await response.json();
+        console.log("✅ API Client - Response data:", responseData);
+        return responseData;
     }
 
     private async makeRequest<T>(
@@ -64,16 +80,13 @@ class ApiClient {
     }
 
     async getSession() {
-        const response = await fetch(`${this.baseURL}/api/auth/session`, {
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
-
-        if (response.ok) {
-            return { data: await response.json() };
-        } else {
+        try {
+            console.log("🔐 API Client - Getting session from BetterAuth");
+            const session = await authClient.getSession();
+            console.log("✅ API Client - Session retrieved:", session);
+            return { data: session.data };
+        } catch (error) {
+            console.error("❌ API Client - Session retrieval failed:", error);
             return { data: null };
         }
     }
@@ -149,9 +162,7 @@ class ApiClient {
     }
 
     // Image upload for ingredient extraction
-    async uploadImage(
-        file: File
-    ): Promise<{
+    async uploadImage(file: File): Promise<{
         ingredients: string[];
         filename: string;
         uploadedAt: string;
@@ -176,6 +187,89 @@ class ApiClient {
         }
 
         return response.json();
+    }
+
+    // Recipe search using ingredients (direct Pinecone search)
+    async searchRecipesByIngredients(
+        ingredients: string[],
+        dietaryPrefs?: string[]
+    ): Promise<SearchResult[]> {
+        console.log("🔧 API Client - Starting recipe search request");
+        console.log("📝 API Client - Ingredients:", ingredients);
+        console.log("🥗 API Client - Dietary preferences:", dietaryPrefs);
+
+        // Create search query from ingredients
+        const query = ingredients.join(" ");
+
+        // Build filters for dietary preferences if provided
+        const filters: Record<string, any> = {};
+        if (dietaryPrefs && dietaryPrefs.length > 0) {
+            // Map dietary preferences to the actual diet field values in the data
+            const dietValues: string[] = [];
+            dietaryPrefs.forEach((pref) => {
+                switch (pref) {
+                    case "vegan":
+                        dietValues.push("Vegan");
+                        break;
+                    case "veg":
+                    case "vegetarian":
+                        // Include all vegetarian variants
+                        dietValues.push("Vegetarian");
+                        dietValues.push("High Protein Vegetarian");
+                        dietValues.push("No Onion No Garlic (Sattvic)");
+                        break;
+                    case "nonVeg":
+                        // Include all non-vegetarian variants
+                        dietValues.push("Non Vegeterian"); // Note: typo in original data
+                        dietValues.push("High Protein Non Vegetarian");
+                        dietValues.push("Eggetarian");
+                        break;
+                    case "glutenFree":
+                        dietValues.push("Gluten Free");
+                        break;
+                    case "diabeticFriendly":
+                        dietValues.push("Diabetic Friendly");
+                        break;
+                    // Add more mappings as needed
+                }
+            });
+
+            // Use $in operator to match any of the diet values
+            if (dietValues.length > 0) {
+                filters.diet = { $in: dietValues };
+            }
+        }
+
+        const requestBody = {
+            query: query,
+            topK: 10, // Always fetch exactly 10 results
+            filters: Object.keys(filters).length > 0 ? filters : undefined,
+        };
+
+        console.log("📤 API Client - Request body:", requestBody);
+        console.log("🌐 API Client - Making request to /api/search");
+
+        try {
+            const response = await this.makeRequest<SearchResponse>(
+                "/api/search",
+                {
+                    method: "POST",
+                    body: JSON.stringify(requestBody),
+                }
+            );
+
+            console.log("✅ API Client - Search API response received");
+            console.log("📊 API Client - Response data:", response);
+            console.log(
+                "📈 API Client - Number of results:",
+                response.results?.length || 0
+            );
+
+            return response.results || [];
+        } catch (error) {
+            console.error("❌ API Client - Search request failed:", error);
+            throw error;
+        }
     }
 }
 

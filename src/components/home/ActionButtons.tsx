@@ -4,20 +4,32 @@ import { Search } from "lucide-react";
 interface ActionButtonsProps {
     handleSearch: () => void;
     clearAll: () => void;
+    isSearching?: boolean;
 }
 
 const ActionButtons: React.FC<ActionButtonsProps> = ({
     handleSearch,
     clearAll,
+    isSearching = false,
 }) => {
     return (
         <div className="flex gap-3 mb-8">
             <button
                 onClick={handleSearch}
-                className="flex-1 bg-cyan-400 text-white py-3 px-4 rounded-full flex items-center justify-center gap-2 font-medium hover:bg-cyan-500 transition-colors"
+                disabled={isSearching}
+                className="flex-1 bg-cyan-400 text-white py-3 px-4 rounded-full flex items-center justify-center gap-2 font-medium hover:bg-cyan-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-                <Search className="w-5 h-5" />
-                Search Recipes
+                {isSearching ? (
+                    <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        Searching...
+                    </>
+                ) : (
+                    <>
+                        <Search className="w-5 h-5" />
+                        Search Recipes
+                    </>
+                )}
             </button>
             <button
                 onClick={clearAll}

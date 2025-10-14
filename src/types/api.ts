@@ -33,6 +33,19 @@ export interface Recipe {
     servings?: number;
 }
 
+// Recipe display type for UI components
+export interface RecipeDisplay {
+    id: string;
+    title: string;
+    time: string;
+    difficulty: string;
+    tags: string[];
+    image: string;
+    score?: number;
+    missingIngredients?: string[];
+    metadata?: any;
+}
+
 // API request/response types
 export interface SignUpData {
     name: string;
@@ -69,4 +82,36 @@ export interface AddFavoriteRequest {
 export interface FavoritesResponse {
     favorites: Favorite[];
     total: number;
+}
+
+// Search API types
+export interface SearchResult {
+    parentId: string;
+    score: number;
+    title: string;
+    snippet: string;
+    matchedChunks: Array<{
+        id: string;
+        score: number;
+        metadata: any;
+    }>;
+}
+
+export interface SearchResponse {
+    results: SearchResult[];
+}
+
+// Match API types
+export interface MatchResult {
+    parentId: string;
+    score?: number;
+    matchScore?: number;
+    missingIngredients: string[];
+    recipe?: any;
+    fullRecipeSnippet?: string;
+    metadata?: any;
+}
+
+export interface MatchResponse {
+    results: MatchResult[];
 }
