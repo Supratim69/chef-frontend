@@ -5,5 +5,5 @@ export { default as DietaryInformation } from "./DietaryInformation";
 export { default as IngredientsSection } from "./IngredientsSection";
 export { default as MissingIngredients } from "./MissingIngredients";
 export { default as CookingInstructions } from "./CookingInstructions";
-export { default as NutritionalInfo } from "./NutritionalInfo";
+export { default as RecipeInfo } from "./NutritionalInfo";
 export { default as StartCookingButton } from "./StartCookingButton";

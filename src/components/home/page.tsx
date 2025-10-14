@@ -305,7 +305,6 @@ export default function HomePage() {
                 dietary: selectedDietaryPrefs.join(","),
             });
 
-            // Store search results in sessionStorage for the search page to use
             console.log("💾 Home Page - Storing results in sessionStorage");
             sessionStorage.setItem(
                 "searchResults",

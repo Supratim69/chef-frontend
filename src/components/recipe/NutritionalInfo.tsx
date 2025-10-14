@@ -1,50 +1,43 @@
 import React from "react";
 
-interface NutritionalData {
+interface RecipeInfoData {
     calories: number;
-    protein: number;
-    fat: number;
-    carbs: number;
+    cookingTime: string;
+    servings: number;
 }
 
-interface NutritionalInfoProps {
-    nutrition: NutritionalData;
+interface RecipeInfoProps {
+    recipeInfo: RecipeInfoData;
 }
 
-const NutritionalInfo: React.FC<NutritionalInfoProps> = ({ nutrition }) => {
+const RecipeInfo: React.FC<RecipeInfoProps> = ({ recipeInfo }) => {
     return (
         <div className="mb-6">
             <h3 className="font-semibold mb-4 text-gray-800">
-                Nutritional Information
+                Recipe Information
             </h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
                 <div className="text-center">
                     <p className="text-3xl font-bold text-cyan-400">
-                        {nutrition.calories} kcal
+                        {recipeInfo.calories}
                     </p>
                     <p className="text-gray-600 text-sm">Calories</p>
                 </div>
                 <div className="text-center">
                     <p className="text-3xl font-bold text-cyan-400">
-                        {nutrition.protein} g
+                        {recipeInfo.cookingTime}
                     </p>
-                    <p className="text-gray-600 text-sm">Protein</p>
+                    <p className="text-gray-600 text-sm">Cooking Time</p>
                 </div>
                 <div className="text-center">
                     <p className="text-3xl font-bold text-cyan-400">
-                        {nutrition.fat} g
+                        {recipeInfo.servings}
                     </p>
-                    <p className="text-gray-600 text-sm">Fat</p>
-                </div>
-                <div className="text-center">
-                    <p className="text-3xl font-bold text-cyan-400">
-                        {nutrition.carbs} g
-                    </p>
-                    <p className="text-gray-600 text-sm">Carbs</p>
+                    <p className="text-gray-600 text-sm">Servings</p>
                 </div>
             </div>
         </div>
     );
 };
 
-export default NutritionalInfo;
+export default RecipeInfo;

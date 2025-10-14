@@ -8,7 +8,6 @@ import { analytics } from "@/lib/analytics";
 
 export default function SearchResultsPage() {
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-    const [favorites, setFavorites] = useState<boolean[]>([]);
     const [searchIngredients, setSearchIngredients] = useState<string[]>([]);
     const [dietaryPrefs, setDietaryPrefs] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
@@ -27,7 +26,6 @@ export default function SearchResultsPage() {
             setDietaryPrefs(dietary.split(","));
         }
 
-        // Load search results from sessionStorage
         console.log("🔍 Results Page - Loading results from sessionStorage");
         const storedResults = sessionStorage.getItem("searchResults");
         console.log(
@@ -55,9 +53,7 @@ export default function SearchResultsPage() {
                 );
 
                 setSearchResults(limitedResults);
-                setFavorites(new Array(limitedResults.length).fill(false));
-                // Clear the stored results after loading
-                sessionStorage.removeItem("searchResults");
+                // sessionStorage.removeItem("searchResults");
                 console.log(
                     "✅ Results Page - Results loaded and sessionStorage cleared"
                 );
@@ -75,12 +71,6 @@ export default function SearchResultsPage() {
         setLoading(false);
     }, [searchParams]);
 
-    const toggleFavorite = (index: number) => {
-        const newFavorites = [...favorites];
-        newFavorites[index] = !newFavorites[index];
-        setFavorites(newFavorites);
-    };
-
     const handleBack = () => {
         router.back();
     };
@@ -92,7 +82,18 @@ export default function SearchResultsPage() {
         // Track recipe click
         analytics.trackRecipeClick(recipe.id, recipe.title, searchPosition);
 
-        router.push(`/recipe/${recipe.id}`);
+        // Encode recipe data to pass through URL params
+        const recipeData = {
+            id: recipe.id,
+            title: recipe.title,
+            image: recipe.image,
+            score: recipe.score,
+            metadata: recipe.metadata,
+            fullRecipe: recipe.fullRecipe,
+        };
+
+        const encodedData = encodeURIComponent(JSON.stringify(recipeData));
+        router.push(`/recipe/${recipe.id}?data=${encodedData}`);
     };
 
     // Transform search results into recipe format for the grid
@@ -118,12 +119,14 @@ export default function SearchResultsPage() {
                     ? dietaryPrefs
                     : [`Score: ${(score * 100).toFixed(0)}%`], // Show dietary preferences or match score
             image:
+                result.fullRecipe?.imageURL ||
                 result.matchedChunks?.[0]?.metadata?.imageURL ||
                 `https://images.unsplash.com/photo-${
                     1621996346565 + index
                 }?w=400&h=300&fit=crop`, // Use real image or fallback
             score: score,
             metadata: result.matchedChunks?.[0]?.metadata || {},
+            fullRecipe: result.fullRecipe || undefined,
         };
     });
 
@@ -174,8 +177,6 @@ export default function SearchResultsPage() {
                 {searchResults.length > 0 ? (
                     <RecipeGrid
                         recipes={recipes}
-                        favorites={favorites}
-                        onToggleFavorite={toggleFavorite}
                         onRecipeClick={handleRecipeClick}
                     />
                 ) : (

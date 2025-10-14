@@ -1,6 +1,6 @@
 import React from "react";
 import Image from "next/image";
-import { Heart, Clock, ChefHat } from "lucide-react";
+import { Clock, ChefHat } from "lucide-react";
 
 interface Recipe {
     id: string;
@@ -13,17 +13,10 @@ interface Recipe {
 
 interface RecipeCardProps {
     recipe: Recipe;
-    isFavorite: boolean;
-    onToggleFavorite: () => void;
     onClick?: () => void;
 }
 
-const RecipeCard: React.FC<RecipeCardProps> = ({
-    recipe,
-    isFavorite,
-    onToggleFavorite,
-    onClick,
-}) => {
+const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
     return (
         <div
             className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-200 cursor-pointer"
@@ -37,26 +30,6 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
                     fill
                     className="object-cover"
                 />
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation(); // Prevent triggering the card click
-                        onToggleFavorite();
-                    }}
-                    className="absolute top-3 right-3 w-9 h-9 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-100 transition-colors"
-                    aria-label={
-                        isFavorite
-                            ? "Remove from favorites"
-                            : "Add to favorites"
-                    }
-                >
-                    <Heart
-                        className={`w-5 h-5 ${
-                            isFavorite
-                                ? "fill-red-500 text-red-500"
-                                : "text-gray-600"
-                        }`}
-                    />
-                </button>
             </div>
 
             {/* Recipe Info */}

@@ -44,6 +44,17 @@ export interface RecipeDisplay {
     score?: number;
     missingIngredients?: string[];
     metadata?: any;
+    fullRecipe?: {
+        ingredients: string;
+        instructions: string;
+        cuisine: string;
+        course: string;
+        diet: string;
+        imageURL: string;
+        prepTime?: number;
+        cookTime?: number;
+        servings?: number;
+    };
 }
 
 // API request/response types
@@ -95,6 +106,17 @@ export interface SearchResult {
         score: number;
         metadata: any;
     }>;
+    fullRecipe?: {
+        ingredients: string;
+        instructions: string;
+        cuisine: string;
+        course: string;
+        diet: string;
+        imageURL: string;
+        prepTime?: number;
+        cookTime?: number;
+        servings?: number;
+    };
 }
 
 export interface SearchResponse {

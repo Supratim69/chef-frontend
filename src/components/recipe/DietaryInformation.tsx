@@ -12,12 +12,12 @@ interface DietaryInformationProps {
 const DietaryInformation: React.FC<DietaryInformationProps> = ({ badges }) => {
     return (
         <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
+            {/* <div className="flex items-center gap-2 mb-3">
                 <span className="text-orange-500">🥕</span>
                 <h3 className="font-semibold text-gray-800">
                     Dietary Information
                 </h3>
-            </div>
+            </div> */}
             <div className="flex flex-wrap gap-2">
                 {badges.map((badge, index) => (
                     <span
