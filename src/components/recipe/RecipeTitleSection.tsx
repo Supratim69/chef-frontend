@@ -5,10 +5,7 @@ interface RecipeTitleSectionProps {
     description: string;
 }
 
-const RecipeTitleSection: React.FC<RecipeTitleSectionProps> = ({
-    title,
-    description,
-}) => {
+const RecipeTitleSection: React.FC<RecipeTitleSectionProps> = ({ title }) => {
     return (
         <div className="py-6">
             <h2 className="text-2xl font-bold mb-2 text-gray-900">{title}</h2>

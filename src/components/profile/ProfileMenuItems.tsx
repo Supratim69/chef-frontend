@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { User, ChevronRight, Edit3, Save, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
@@ -26,7 +26,7 @@ const ProfileMenuItems = () => {
         dietPreference: "",
     });
 
-    const fetchDietPreference = async () => {
+    const fetchDietPreference = useCallback(async () => {
         if (!user) return;
 
         setLoadingDietPreference(true);
@@ -39,7 +39,7 @@ const ProfileMenuItems = () => {
         } finally {
             setLoadingDietPreference(false);
         }
-    };
+    }, [user]);
 
     const handleEditClick = async () => {
         await fetchDietPreference();
@@ -56,7 +56,7 @@ const ProfileMenuItems = () => {
         if (!user) return;
 
         try {
-            const updateData: any = {};
+            const updateData: Record<string, string | null> = {};
             if (formData.name !== user.name) updateData.name = formData.name;
             if (formData.email !== user.email)
                 updateData.email = formData.email;
@@ -95,7 +95,7 @@ const ProfileMenuItems = () => {
         if (user && !isEditing) {
             fetchDietPreference();
         }
-    }, [user]);
+    }, [user, fetchDietPreference, isEditing]);
 
     const getDietPreferenceDisplay = () => {
         if (loadingDietPreference) return "Loading...";

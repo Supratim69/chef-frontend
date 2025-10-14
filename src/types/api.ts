@@ -43,7 +43,7 @@ export interface RecipeDisplay {
     image: string;
     score?: number;
     missingIngredients?: string[];
-    metadata?: any;
+    metadata?: Record<string, unknown>;
     fullRecipe?: {
         ingredients: string;
         instructions: string;
@@ -104,7 +104,7 @@ export interface SearchResult {
     matchedChunks: Array<{
         id: string;
         score: number;
-        metadata: any;
+        metadata: Record<string, unknown>;
     }>;
     fullRecipe?: {
         ingredients: string;
@@ -129,9 +129,9 @@ export interface MatchResult {
     score?: number;
     matchScore?: number;
     missingIngredients: string[];
-    recipe?: any;
+    recipe?: Record<string, unknown>;
     fullRecipeSnippet?: string;
-    metadata?: any;
+    metadata?: Record<string, unknown>;
 }
 
 export interface MatchResponse {

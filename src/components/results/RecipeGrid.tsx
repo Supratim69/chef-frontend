@@ -19,7 +19,7 @@ const RecipeGrid: React.FC<RecipeGridProps> = ({ recipes, onRecipeClick }) => {
     return (
         <div className="flex-1 overflow-y-auto px-6 py-6 pb-24">
             <div className="grid grid-cols-2 gap-4">
-                {recipes.map((recipe, index) => (
+                {recipes.map((recipe) => (
                     <RecipeCard
                         key={recipe.id}
                         recipe={recipe}

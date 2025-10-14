@@ -140,7 +140,7 @@ class ApiClient {
     // Recipe methods (if your backend has recipe endpoints)
     async searchRecipes(
         query: string,
-        filters?: Record<string, any>
+        filters?: Record<string, unknown>
     ): Promise<ApiResponse<Recipe[]>> {
         const searchParams = new URLSearchParams({ q: query });
 
@@ -202,7 +202,7 @@ class ApiClient {
         const query = ingredients.join(" ");
 
         // Build filters for dietary preferences if provided
-        const filters: Record<string, any> = {};
+        const filters: Record<string, unknown> = {};
         if (dietaryPrefs && dietaryPrefs.length > 0) {
             // Map dietary preferences to the actual diet field values in the data
             const dietValues: string[] = [];

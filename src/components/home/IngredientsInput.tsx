@@ -72,7 +72,7 @@ const IngredientsInput: React.FC<IngredientsInputProps> = ({
         };
 
         loadUserDietPreference();
-    }, [user]);
+    }, [user, dietaryPrefs, toggleDietaryPref]);
 
     const handleImageUpload = async (
         event: React.ChangeEvent<HTMLInputElement>

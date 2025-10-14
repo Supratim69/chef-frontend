@@ -1,6 +1,5 @@
 import React from "react";
 import Image from "next/image";
-import { User } from "lucide-react";
 
 interface UserProfileSectionProps {
     name: string;

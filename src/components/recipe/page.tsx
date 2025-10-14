@@ -7,7 +7,6 @@ import {
     RecipeTitleSection,
     DietaryInformation,
     IngredientsSection,
-    MissingIngredients,
     CookingInstructions,
     RecipeInfo,
     StartCookingButton,
@@ -20,7 +19,6 @@ interface RecipeDetailsPageProps {
 }
 
 export default function RecipeDetailsPage({
-    recipeId,
     recipeData,
 }: RecipeDetailsPageProps) {
     const router = useRouter();
@@ -157,17 +155,6 @@ export default function RecipeDetailsPage({
               { text: "Salt and black pepper to taste", available: true },
               { text: "Fresh parsley, chopped, for garnish", available: true },
           ];
-
-    const substitutes = [
-        {
-            ingredient: "celery",
-            substitute: "Use 1/2 cup chopped bell pepper or zucchini.",
-        },
-        {
-            ingredient: "dried thyme",
-            substitute: "Use 1 tsp fresh thyme or a pinch of dried oregano.",
-        },
-    ];
 
     // For instructions, we'll use a generic message since full instructions aren't available in metadata
     // The actual recipe instructions are embedded in the chunks but not easily reconstructable

@@ -38,7 +38,7 @@ export default function LoginPage() {
             try {
                 await signup(email, password, name);
                 router.push(redirectTo);
-            } catch (err) {
+            } catch {
                 setError("Failed to create account");
             }
         } else {
@@ -46,7 +46,7 @@ export default function LoginPage() {
             try {
                 await login(email, password);
                 router.push(redirectTo);
-            } catch (err) {
+            } catch {
                 setError("Invalid email or password");
             }
         }

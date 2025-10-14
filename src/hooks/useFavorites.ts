@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "../lib/api-client";
 import { useAuth } from "../contexts/AuthContext";
 import type { Favorite, AddFavoriteRequest } from "../types/api";
@@ -11,16 +11,7 @@ export function useFavorites() {
     const [error, setError] = useState<string | null>(null);
     const { isAuthenticated } = useAuth();
 
-    // Load favorites when user is authenticated
-    useEffect(() => {
-        if (isAuthenticated) {
-            loadFavorites();
-        } else {
-            setFavorites([]);
-        }
-    }, [isAuthenticated]);
-
-    const loadFavorites = async () => {
+    const loadFavorites = useCallback(async () => {
         if (!isAuthenticated) return;
 
         setIsLoading(true);
@@ -37,7 +28,16 @@ export function useFavorites() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [isAuthenticated]);
+
+    // Load favorites when user is authenticated
+    useEffect(() => {
+        if (isAuthenticated) {
+            loadFavorites();
+        } else {
+            setFavorites([]);
+        }
+    }, [isAuthenticated, loadFavorites]);
 
     const addFavorite = async (recipe: AddFavoriteRequest) => {
         if (!isAuthenticated) {

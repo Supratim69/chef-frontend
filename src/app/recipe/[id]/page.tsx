@@ -1,19 +1,25 @@
 import RecipeDetailsPage from "@/components/recipe/page";
 
 interface RecipePageProps {
-    params: {
+    params: Promise<{
         id: string;
-    };
-    searchParams: {
+    }>;
+    searchParams: Promise<{
         data?: string;
-    };
+    }>;
 }
 
-export default function RecipePage({ params, searchParams }: RecipePageProps) {
+export default async function RecipePage({
+    params,
+    searchParams,
+}: RecipePageProps) {
+    const resolvedParams = await params;
+    const resolvedSearchParams = await searchParams;
+
     return (
         <RecipeDetailsPage
-            recipeId={params.id}
-            recipeData={searchParams.data}
+            recipeId={resolvedParams.id}
+            recipeData={resolvedSearchParams.data}
         />
     );
 }

@@ -5,8 +5,7 @@ import Header from "./Header";
 
 import IngredientsInput from "./IngredientsInput";
 import ActionButtons from "./ActionButtons";
-import CategoryGrid from "./CategoryGrid";
-import RecipeList from "./RecipeList";
+
 import AppLayout from "@/components/layout/AppLayout";
 import { apiClient } from "@/lib/api-client";
 import { analytics } from "@/lib/analytics";
@@ -262,8 +261,8 @@ export default function HomePage() {
         try {
             // Get selected dietary preferences
             const selectedDietaryPrefs = Object.entries(dietaryPrefs)
-                .filter(([_, value]) => value)
-                .map(([key, _]) => key);
+                .filter(([, value]) => value)
+                .map(([key]) => key);
 
             // Search recipes using the API (direct Pinecone search)
             console.log(

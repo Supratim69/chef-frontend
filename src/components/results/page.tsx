@@ -120,7 +120,10 @@ export default function SearchResultsPage() {
                     : [`Score: ${(score * 100).toFixed(0)}%`], // Show dietary preferences or match score
             image:
                 result.fullRecipe?.imageURL ||
-                result.matchedChunks?.[0]?.metadata?.imageURL ||
+                (typeof result.matchedChunks?.[0]?.metadata?.imageURL ===
+                "string"
+                    ? result.matchedChunks[0].metadata.imageURL
+                    : null) ||
                 `https://images.unsplash.com/photo-${
                     1621996346565 + index
                 }?w=400&h=300&fit=crop`, // Use real image or fallback
@@ -189,7 +192,7 @@ export default function SearchResultsPage() {
                                 No recipes found
                             </h3>
                             <p className="text-gray-600 mb-6 max-w-sm">
-                                We couldn't find any recipes matching your
+                                We couldn&apos;t find any recipes matching your
                                 ingredients:{" "}
                                 <strong>{searchIngredients.join(", ")}</strong>
                             </p>
