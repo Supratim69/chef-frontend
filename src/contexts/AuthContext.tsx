@@ -23,47 +23,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const refreshSession = async () => {
         try {
-            // Make direct API call to get session
-            const response = await fetch(
-                `${
-                    process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
-                }/api/auth/session`,
-                {
-                    credentials: "include",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                }
-            );
+            const response = await authClient.getSession();
 
-            if (response.ok) {
-                const session = await response.json();
-                if (session.user) {
-                    // Convert BetterAuth user to our User type
-                    const betterAuthUser = session.user;
-                    const user: User = {
-                        id: betterAuthUser.id,
-                        name: betterAuthUser.name,
-                        email: betterAuthUser.email,
-                        emailVerified: betterAuthUser.emailVerified,
-                        image: betterAuthUser.image,
-                        createdAt: betterAuthUser.createdAt,
-                        updatedAt: betterAuthUser.updatedAt,
-                    };
-                    setUser(user);
-                    // Backup for development
-                    localStorage.setItem("auth-backup", JSON.stringify(user));
-                } else {
-                    // No session found
-                    const backup = localStorage.getItem("auth-backup");
-                    if (backup) {
-                        setUser(JSON.parse(backup));
-                    } else {
-                        setUser(null);
-                    }
-                }
+            if (response.data?.user) {
+                // Convert manual auth user to our User type
+                const authUser = response.data.user;
+                const user: User = {
+                    id: authUser.id,
+                    name: authUser.name,
+                    email: authUser.email,
+                    emailVerified: authUser.emailVerified,
+                    image: null, // Manual auth doesn't have image field
+                    createdAt: authUser.createdAt,
+                    updatedAt: authUser.createdAt, // Use createdAt as fallback for updatedAt
+                    dietPreference: authUser.dietPreference,
+                };
+                setUser(user);
+                // Backup for development
+                localStorage.setItem("auth-backup", JSON.stringify(user));
             } else {
-                // API call failed, try backup
+                // No session found
                 const backup = localStorage.getItem("auth-backup");
                 if (backup) {
                     setUser(JSON.parse(backup));
@@ -73,7 +52,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
         } catch (error) {
             console.error("Session refresh failed:", error);
-            setUser(null);
+            // Try backup as fallback
+            const backup = localStorage.getItem("auth-backup");
+            if (backup) {
+                setUser(JSON.parse(backup));
+            } else {
+                setUser(null);
+            }
         }
     };
 
@@ -95,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const login = async (email: string, password: string) => {
         setIsLoading(true);
         try {
-            const response = await authClient.signIn.email({
+            const response = await authClient.signIn({
                 email,
                 password,
             });
@@ -105,16 +90,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
 
             if (response.data?.user) {
-                // Convert BetterAuth user to our User type
-                const betterAuthUser = response.data.user;
+                // Convert manual auth user to our User type
+                const authUser = response.data.user;
                 const user: User = {
-                    id: betterAuthUser.id,
-                    name: betterAuthUser.name,
-                    email: betterAuthUser.email,
-                    emailVerified: betterAuthUser.emailVerified,
-                    image: betterAuthUser.image,
-                    createdAt: betterAuthUser.createdAt,
-                    updatedAt: betterAuthUser.updatedAt,
+                    id: authUser.id,
+                    name: authUser.name,
+                    email: authUser.email,
+                    emailVerified: authUser.emailVerified,
+                    image: null, // Manual auth doesn't have image field
+                    createdAt: authUser.createdAt,
+                    updatedAt: authUser.createdAt, // Use createdAt as fallback for updatedAt
+                    dietPreference: authUser.dietPreference,
                 };
                 setUser(user);
                 // Backup for development
@@ -134,7 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const signup = async (email: string, password: string, name: string) => {
         setIsLoading(true);
         try {
-            const response = await authClient.signUp.email({
+            const response = await authClient.signUp({
                 email,
                 password,
                 name,
@@ -145,16 +131,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
 
             if (response.data?.user) {
-                // Convert BetterAuth user to our User type
-                const betterAuthUser = response.data.user;
+                // Convert manual auth user to our User type
+                const authUser = response.data.user;
                 const user: User = {
-                    id: betterAuthUser.id,
-                    name: betterAuthUser.name,
-                    email: betterAuthUser.email,
-                    emailVerified: betterAuthUser.emailVerified,
-                    image: betterAuthUser.image,
-                    createdAt: betterAuthUser.createdAt,
-                    updatedAt: betterAuthUser.updatedAt,
+                    id: authUser.id,
+                    name: authUser.name,
+                    email: authUser.email,
+                    emailVerified: authUser.emailVerified,
+                    image: null, // Manual auth doesn't have image field
+                    createdAt: authUser.createdAt,
+                    updatedAt: authUser.createdAt, // Use createdAt as fallback for updatedAt
+                    dietPreference: authUser.dietPreference,
                 };
                 setUser(user);
 

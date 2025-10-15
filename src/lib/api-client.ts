@@ -66,22 +66,25 @@ class ApiClient {
         return this.handleResponse<T>(response);
     }
 
-    // Authentication methods using BetterAuth client
+    // Authentication methods using manual auth client
     async signUp(data: SignUpData) {
-        return authClient.signUp.email(data);
+        console.log("🔐 API Client - Signing up user");
+        return authClient.signUp(data);
     }
 
     async signIn(data: SignInData) {
-        return authClient.signIn.email(data);
+        console.log("🔐 API Client - Signing in user");
+        return authClient.signIn(data);
     }
 
     async signOut() {
+        console.log("🔐 API Client - Signing out user");
         return authClient.signOut();
     }
 
     async getSession() {
         try {
-            console.log("🔐 API Client - Getting session from BetterAuth");
+            console.log("🔐 API Client - Getting session from manual auth");
             const session = await authClient.getSession();
             console.log("✅ API Client - Session retrieved:", session);
             return { data: session.data };
@@ -89,6 +92,19 @@ class ApiClient {
             console.error("❌ API Client - Session retrieval failed:", error);
             return { data: null };
         }
+    }
+
+    // Profile methods using manual auth
+    async getProfile() {
+        console.log("👤 API Client - Getting user profile from manual auth");
+        return authClient.getSession(); // Profile data is included in session response
+    }
+
+    async updateProfileData(data: { name: string; dietPreference?: string }) {
+        console.log(
+            "👤 API Client - Updating user profile through manual auth"
+        );
+        return authClient.updateProfile(data);
     }
 
     // Favorites methods
@@ -114,11 +130,13 @@ class ApiClient {
         );
     }
 
-    // User methods
+    // User methods (DEPRECATED - use manual auth profile methods instead)
+    /** @deprecated Use getProfile() instead */
     async getCurrentUser(): Promise<ApiResponse<User>> {
         return this.makeRequest<ApiResponse<User>>("/api/user");
     }
 
+    /** @deprecated Use updateProfileData() instead */
     async updateUser(
         userId: string,
         userData: Partial<User>
@@ -129,6 +147,7 @@ class ApiClient {
         });
     }
 
+    /** @deprecated Use getProfile() to get user's diet preference instead */
     async getDietPreference(
         userId: string
     ): Promise<{ dietPreference: string | null }> {

@@ -360,23 +360,6 @@ export default function LoginPage() {
                     </form>
 
                     <div className="mt-6">
-                        <div className="flex items-center justify-between">
-                            {!isSignUp && (
-                                <button
-                                    onClick={switchToForgotPassword}
-                                    className="text-sm text-cyan-400 hover:text-cyan-500"
-                                >
-                                    Forgot password?
-                                </button>
-                            )}
-                            <Link
-                                href="/"
-                                className="text-sm text-gray-600 hover:text-gray-500"
-                            >
-                                Back to Home
-                            </Link>
-                        </div>
-
                         <div className="mt-6">
                             <div className="relative">
                                 <div className="absolute inset-0 flex items-center">

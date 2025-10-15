@@ -31,8 +31,14 @@ const ProfileMenuItems = () => {
 
         setLoadingDietPreference(true);
         try {
-            const response = await apiClient.getDietPreference(user.id);
-            setCurrentDietPreference(response.dietPreference);
+            const response = await apiClient.getProfile();
+            if (response.data?.user) {
+                setCurrentDietPreference(
+                    response.data.user.dietPreference || null
+                );
+            } else {
+                setCurrentDietPreference(null);
+            }
         } catch (error) {
             console.error("Failed to fetch diet preference:", error);
             setCurrentDietPreference(null);

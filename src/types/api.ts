@@ -7,6 +7,7 @@ export interface User {
     image?: string | null;
     createdAt: Date | string;
     updatedAt: Date | string;
+    dietPreference?: string | null; // Added for manual auth backend compatibility
 }
 
 // Favorite types matching backend schema

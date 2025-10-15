@@ -3,14 +3,16 @@
 import { useState } from "react";
 import { apiClient } from "../lib/api-client";
 import { useAuth } from "../contexts/AuthContext";
-import type { User } from "../types/api";
 
 export function useProfile() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const { user, refreshSession } = useAuth();
 
-    const updateProfile = async (updateData: Partial<User>) => {
+    const updateProfile = async (updateData: {
+        name?: string;
+        dietPreference?: string;
+    }) => {
         if (!user) {
             throw new Error("Must be authenticated to update profile");
         }
@@ -19,10 +21,15 @@ export function useProfile() {
         setError(null);
 
         try {
-            const response = await apiClient.updateUser(user.id, updateData);
+            const response = await apiClient.updateProfileData({
+                name: updateData.name || user.name,
+                dietPreference: updateData.dietPreference,
+            });
 
             if (response.error) {
-                throw new Error(response.error);
+                throw new Error(
+                    response.error.message || "Failed to update profile"
+                );
             }
 
             // Refresh the session to get updated user data

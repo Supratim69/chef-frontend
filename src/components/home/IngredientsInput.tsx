@@ -71,11 +71,15 @@ const IngredientsInput: React.FC<IngredientsInputProps> = ({
         const loadUserDietPreference = async () => {
             if (user) {
                 try {
-                    const response = await apiClient.getDietPreference(user.id);
-                    setUserDietPreference(response.dietPreference);
+                    const response = await apiClient.getProfile();
+                    console.log("Full profile response:", response);
+                    const dietPreference =
+                        response.data?.user?.dietPreference || null;
+                    setUserDietPreference(dietPreference);
+                    console.log("Loaded diet preference:", dietPreference);
 
                     // Auto-select user's diet preference if it matches our options
-                    if (response.dietPreference) {
+                    if (dietPreference) {
                         const prefMap: Record<
                             string,
                             keyof DietaryPreferences
@@ -86,7 +90,7 @@ const IngredientsInput: React.FC<IngredientsInputProps> = ({
                             "gluten-free": "glutenFree",
                         };
 
-                        const prefKey = prefMap[response.dietPreference];
+                        const prefKey = prefMap[dietPreference];
                         if (prefKey && !dietaryPrefs[prefKey]) {
                             toggleDietaryPref(prefKey);
                         }
