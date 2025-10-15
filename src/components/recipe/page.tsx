@@ -9,8 +9,8 @@ import {
     IngredientsSection,
     CookingInstructions,
     RecipeInfo,
-    StartCookingButton,
 } from "./";
+import FavoriteButton from "./FavoriteButton";
 import AppLayout from "@/components/layout/AppLayout";
 
 interface RecipeDetailsPageProps {
@@ -19,6 +19,7 @@ interface RecipeDetailsPageProps {
 }
 
 export default function RecipeDetailsPage({
+    recipeId,
     recipeData,
 }: RecipeDetailsPageProps) {
     const router = useRouter();
@@ -242,6 +243,24 @@ export default function RecipeDetailsPage({
                             description={recipeInfo.description}
                         />
 
+                        {/* Favorite Button */}
+                        <div className="mb-6">
+                            <FavoriteButton
+                                recipeId={
+                                    parsedRecipeData?.recipeId ||
+                                    parsedRecipeData?.id ||
+                                    recipeId
+                                }
+                                recipeName={recipeInfo.title}
+                                recipeImage={recipeInfo.imageUrl}
+                                cuisine={
+                                    parsedRecipeData?.fullRecipe?.cuisine ||
+                                    parsedRecipeData?.metadata?.cuisine
+                                }
+                                className="w-full"
+                            />
+                        </div>
+
                         <DietaryInformation badges={recipeInfo.dietaryTags} />
 
                         <IngredientsSection ingredients={ingredients} />
@@ -252,9 +271,9 @@ export default function RecipeDetailsPage({
 
                         <RecipeInfo recipeInfo={recipeInfoData} />
 
-                        <StartCookingButton
+                        {/* <StartCookingButton
                             onStartCooking={handleStartCooking}
-                        />
+                        /> */}
                     </div>
                 </div>
             </div>

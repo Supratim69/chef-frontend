@@ -109,25 +109,105 @@ class ApiClient {
 
     // Favorites methods
     async getFavorites(): Promise<FavoritesResponse> {
-        return this.makeRequest<FavoritesResponse>("/api/favorites");
+        console.log("❤️ API Client - Getting user favorites");
+
+        // Get current user session to get userId
+        const session = await this.getSession();
+        if (!session.data?.user?.id) {
+            throw new Error("User not authenticated");
+        }
+
+        const userId = session.data.user.id;
+        return this.makeRequest<FavoritesResponse>(
+            `/api/users/${userId}/favorites`
+        );
     }
 
     async addFavorite(
         recipe: AddFavoriteRequest
     ): Promise<ApiResponse<Favorite>> {
-        return this.makeRequest<ApiResponse<Favorite>>("/api/favorites", {
-            method: "POST",
-            body: JSON.stringify(recipe),
-        });
+        console.log("❤️ API Client - Adding recipe to favorites:", recipe);
+
+        // Get current user session to get userId
+        const session = await this.getSession();
+        if (!session.data?.user?.id) {
+            throw new Error("User not authenticated");
+        }
+
+        const userId = session.data.user.id;
+        return this.makeRequest<ApiResponse<Favorite>>(
+            `/api/users/${userId}/favorites`,
+            {
+                method: "POST",
+                body: JSON.stringify(recipe),
+            }
+        );
     }
 
     async removeFavorite(recipeId: string): Promise<ApiResponse<void>> {
+        console.log(
+            "❤️ API Client - Removing recipe from favorites:",
+            recipeId
+        );
+
+        // Get current user session to get userId
+        const session = await this.getSession();
+        if (!session.data?.user?.id) {
+            throw new Error("User not authenticated");
+        }
+
+        const userId = session.data.user.id;
         return this.makeRequest<ApiResponse<void>>(
-            `/api/favorites/${recipeId}`,
+            `/api/users/${userId}/favorites/${recipeId}`,
             {
                 method: "DELETE",
             }
         );
+    }
+
+    async getFavoriteStatus(
+        recipeId: string
+    ): Promise<{ isFavorited: boolean }> {
+        console.log(
+            "❤️ API Client - Checking favorite status for recipe:",
+            recipeId
+        );
+
+        // Get current user session to get userId
+        const session = await this.getSession();
+        if (!session.data?.user?.id) {
+            return { isFavorited: false };
+        }
+
+        const userId = session.data.user.id;
+        return this.makeRequest<{ isFavorited: boolean }>(
+            `/api/users/${userId}/favorites/${recipeId}/status`
+        );
+    }
+
+    async toggleFavorite(recipe: AddFavoriteRequest): Promise<{
+        action: "added" | "removed";
+        favorite?: Favorite;
+    }> {
+        console.log(
+            "❤️ API Client - Toggling favorite status for recipe:",
+            recipe
+        );
+
+        // Get current user session to get userId
+        const session = await this.getSession();
+        if (!session.data?.user?.id) {
+            throw new Error("User not authenticated");
+        }
+
+        const userId = session.data.user.id;
+        return this.makeRequest<{
+            action: "added" | "removed";
+            favorite?: Favorite;
+        }>(`/api/users/${userId}/favorites/${recipe.recipeId}/toggle`, {
+            method: "POST",
+            body: JSON.stringify(recipe),
+        });
     }
 
     // User methods (DEPRECATED - use manual auth profile methods instead)

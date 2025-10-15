@@ -26,7 +26,7 @@ const Header = () => {
                     </p>
                 ) : (
                     <p className="text-gray-600">
-                        Transform your ingredients into culinary masterpieces 🍽️
+                        Transform your ingredients into masterpieces 🍽️
                     </p>
                 )}
             </div>

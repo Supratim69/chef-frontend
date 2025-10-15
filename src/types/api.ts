@@ -15,10 +15,24 @@ export interface Favorite {
     id: string;
     userId: string;
     recipeId: string;
-    recipeName: string;
-    recipeImage?: string;
-    cuisine?: string;
-    createdAt: string;
+    recipeName?: string; // Legacy field, may be null with new system
+    recipeImage?: string; // Legacy field, may be null with new system
+    cuisine?: string; // Legacy field, may be null with new system
+    dateSaved: string;
+    deletedAt?: string | null;
+    // New relationship with Recipe table
+    recipe?: {
+        id: string;
+        title: string;
+        imageUrl?: string;
+        cuisine?: string;
+        course?: string;
+        diet?: string;
+        prepTimeMins?: number;
+        cookTimeMins?: number;
+        servings?: number;
+        instructions?: string;
+    };
 }
 
 // Recipe types (for favorites functionality)
@@ -99,7 +113,8 @@ export interface FavoritesResponse {
 
 // Search API types
 export interface SearchResult {
-    parentId: string;
+    recipeId?: string; // New UUID identifier from Pinecone metadata
+    parentId: string; // Legacy identifier for backwards compatibility
     score: number;
     title: string;
     snippet: string;

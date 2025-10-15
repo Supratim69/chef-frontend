@@ -1,30 +1,26 @@
 import React from "react";
 import RecipeCard from "./RecipeCard";
-
-interface Recipe {
-    id: number;
-    title: string;
-    description: string;
-    time: string;
-    image: string;
-}
+import type { Favorite } from "@/types/api";
 
 interface FavoriteRecipesListProps {
-    recipes: Recipe[];
-    onViewRecipe: (recipeId: number) => void;
+    favorites: Favorite[];
+    onViewRecipe: (recipeId: string) => void;
+    onRemoveFavorite: (recipeId: string) => void;
 }
 
 const FavoriteRecipesList: React.FC<FavoriteRecipesListProps> = ({
-    recipes,
+    favorites,
     onViewRecipe,
+    onRemoveFavorite,
 }) => {
     return (
         <div className="flex-1 overflow-y-auto px-6 py-6">
-            {recipes.map((recipe) => (
+            {favorites.map((favorite) => (
                 <RecipeCard
-                    key={recipe.id}
-                    recipe={recipe}
+                    key={favorite.id}
+                    favorite={favorite}
                     onViewRecipe={onViewRecipe}
+                    onRemoveFavorite={onRemoveFavorite}
                 />
             ))}
         </div>

@@ -86,6 +86,7 @@ export default function SearchResultsPage() {
         // Encode recipe data to pass through URL params
         const recipeData = {
             id: recipe.id,
+            recipeId: recipe.id, // Include the UUID for favorites
             title: recipe.title,
             image: recipe.image,
             score: recipe.score,
@@ -115,7 +116,7 @@ export default function SearchResultsPage() {
         });
 
         return {
-            id: result.parentId,
+            id: result.recipeId || result.parentId, // Use UUID if available, fallback to parentId
             title: title,
             time: "25 min", // Default time since not provided by search API
             difficulty: "Medium", // Default difficulty
