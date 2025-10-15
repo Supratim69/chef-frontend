@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiClient } from "@/lib/api-client";
 import Dialog from "@/components/ui/Dialog";
+import Illustration from "@/components/ui/Illustration";
 
 interface DietaryPreferences {
     vegan: boolean;
@@ -367,9 +368,18 @@ const IngredientsInput: React.FC<IngredientsInputProps> = ({
     return (
         <>
             <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
-                <h3 className="font-semibold text-gray-800 mb-4">
-                    What ingredients do you have?
-                </h3>
+                <div className="flex items-center gap-3 mb-4">
+                    <Illustration
+                        name="ingredients"
+                        alt="Ingredients"
+                        width={32}
+                        height={32}
+                        className="flex-shrink-0"
+                    />
+                    <h3 className="font-semibold text-gray-800">
+                        What ingredients do you have?
+                    </h3>
+                </div>
 
                 {/* Input with Add Button */}
                 <div className="flex gap-2 mb-4">
@@ -585,9 +595,18 @@ const IngredientsInput: React.FC<IngredientsInputProps> = ({
                         Your Ingredients:
                     </h4>
                     {ingredients.length === 0 ? (
-                        <p className="text-gray-500 text-sm">
-                            No ingredients added yet. Add some above!
-                        </p>
+                        <div className="flex flex-col items-center justify-center py-8 text-center">
+                            <Illustration
+                                name="empty_state"
+                                alt="No ingredients yet"
+                                width={64}
+                                height={64}
+                                className="mb-3 opacity-60"
+                            />
+                            <p className="text-gray-500 text-sm">
+                                No ingredients added yet. Add some above!
+                            </p>
+                        </div>
                     ) : (
                         <div className="flex flex-wrap gap-2">
                             {ingredients.map((ingredient, index) => (

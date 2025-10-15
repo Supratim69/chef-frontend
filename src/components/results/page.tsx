@@ -5,6 +5,7 @@ import { SearchResultsHeader, RecipeGrid } from "./";
 import AppLayout from "@/components/layout/AppLayout";
 import type { SearchResult, RecipeDisplay } from "@/types/api";
 import { analytics } from "@/lib/analytics";
+import Illustration from "@/components/ui/Illustration";
 
 export default function SearchResultsPage() {
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -148,10 +149,17 @@ export default function SearchResultsPage() {
         return (
             <AppLayout showBottomNav={false}>
                 <div className="w-full max-w-2xl mx-auto bg-white shadow-lg min-h-screen flex flex-col items-center justify-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500"></div>
-                    <p className="mt-4 text-gray-600">
-                        Loading search results...
-                    </p>
+                    <div className="mb-4">
+                        <Illustration
+                            name="search"
+                            alt="Searching recipes"
+                            width={64}
+                            height={64}
+                            className="mx-auto animate-pulse"
+                        />
+                    </div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500 mb-4"></div>
+                    <p className="text-gray-600">Loading search results...</p>
                 </div>
             </AppLayout>
         );
@@ -190,8 +198,14 @@ export default function SearchResultsPage() {
                 ) : (
                     <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
                         <div className="text-center">
-                            <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-                                <span className="text-4xl">🔍</span>
+                            <div className="mb-6">
+                                <Illustration
+                                    name="no_results"
+                                    alt="No recipes found"
+                                    width={96}
+                                    height={96}
+                                    className="mx-auto"
+                                />
                             </div>
                             <h3 className="text-xl font-semibold text-gray-800 mb-2">
                                 No recipes found

@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import Illustration from "@/components/ui/Illustration";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -190,11 +191,22 @@ export default function LoginPage() {
                     >
                         <ArrowLeft className="w-6 h-6 text-gray-600" />
                     </button>
-                    <h2 className="text-center text-3xl font-extrabold text-gray-900">
-                        {isSignUp
-                            ? "Create your account"
-                            : "Sign in to your account"}
-                    </h2>
+                    <div className="text-center">
+                        <div className="mb-4">
+                            <Illustration
+                                name={isSignUp ? "welcome" : "chef"}
+                                alt={isSignUp ? "Welcome" : "Chef"}
+                                width={64}
+                                height={64}
+                                className="mx-auto"
+                            />
+                        </div>
+                        <h2 className="text-3xl font-extrabold text-gray-900">
+                            {isSignUp
+                                ? "Create your account"
+                                : "Sign in to your account"}
+                        </h2>
+                    </div>
                 </div>
                 <p className="mt-2 text-center text-sm text-gray-600">
                     {isSignUp
