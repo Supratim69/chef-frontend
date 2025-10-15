@@ -38,6 +38,7 @@ const IngredientsInput: React.FC<IngredientsInputProps> = ({
         null
     );
     const [uploadingImage, setUploadingImage] = useState(false);
+    const [showCameraOptions, setShowCameraOptions] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Load user's diet preference from backend
@@ -73,6 +74,13 @@ const IngredientsInput: React.FC<IngredientsInputProps> = ({
 
         loadUserDietPreference();
     }, [user, dietaryPrefs, toggleDietaryPref]);
+
+    // Helper function to detect mobile device
+    const isMobileDevice = () => {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            navigator.userAgent
+        );
+    };
 
     const handleImageUpload = async (
         event: React.ChangeEvent<HTMLInputElement>
@@ -235,8 +243,9 @@ const IngredientsInput: React.FC<IngredientsInputProps> = ({
                 </button>
             </div>
 
-            {/* Upload Photo Button */}
+            {/* Photo Options */}
             <div className="mb-4">
+                {/* Hidden file inputs */}
                 <input
                     ref={fileInputRef}
                     type="file"
@@ -244,41 +253,98 @@ const IngredientsInput: React.FC<IngredientsInputProps> = ({
                     onChange={handleImageUpload}
                     className="hidden"
                 />
-                <button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingImage}
-                    className="w-full py-3 border border-gray-200 rounded-lg text-gray-600 text-sm font-medium flex items-center justify-center gap-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                    {uploadingImage ? (
-                        <>
-                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-cyan-500"></div>
-                            Processing image...
-                        </>
-                    ) : (
-                        <>
-                            <svg
-                                className="w-5 h-5"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                                />
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                                />
-                            </svg>
-                            Upload a photo of your ingredients
-                        </>
-                    )}
-                </button>
+
+                {/* Photo buttons */}
+                <div className="grid grid-cols-2 gap-2">
+                    <button
+                        onClick={() => {
+                            // Set capture attribute for camera
+                            if (fileInputRef.current) {
+                                // Use environment (rear) camera on mobile devices
+                                if (isMobileDevice()) {
+                                    fileInputRef.current.setAttribute(
+                                        "capture",
+                                        "environment"
+                                    );
+                                } else {
+                                    fileInputRef.current.setAttribute(
+                                        "capture",
+                                        "camera"
+                                    );
+                                }
+                                fileInputRef.current.click();
+                            }
+                        }}
+                        disabled={uploadingImage}
+                        className="py-3 border border-cyan-200 bg-cyan-50 rounded-lg text-cyan-700 text-sm font-medium flex items-center justify-center gap-2 hover:bg-cyan-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                        {uploadingImage ? (
+                            <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-cyan-500"></div>
+                                Processing...
+                            </>
+                        ) : (
+                            <>
+                                <svg
+                                    className="w-5 h-5"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                                    />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                                    />
+                                </svg>
+                                Take Photo
+                            </>
+                        )}
+                    </button>
+
+                    <button
+                        onClick={() => {
+                            // Remove capture attribute for gallery
+                            if (fileInputRef.current) {
+                                fileInputRef.current.removeAttribute("capture");
+                                fileInputRef.current.click();
+                            }
+                        }}
+                        disabled={uploadingImage}
+                        className="py-3 border border-gray-200 rounded-lg text-gray-600 text-sm font-medium flex items-center justify-center gap-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                        {uploadingImage ? (
+                            <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-cyan-500"></div>
+                                Processing...
+                            </>
+                        ) : (
+                            <>
+                                <svg
+                                    className="w-5 h-5"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                    />
+                                </svg>
+                                From Gallery
+                            </>
+                        )}
+                    </button>
+                </div>
             </div>
 
             {/* Dietary Preferences */}
