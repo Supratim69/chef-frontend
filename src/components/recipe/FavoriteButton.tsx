@@ -79,9 +79,6 @@ const FavoriteButton: React.FC<FavoriteButtonProps> = ({
                 response.action === "added"
                     ? "Added to favorites!"
                     : "Removed from favorites";
-
-            // You could replace this with a toast notification
-            console.log(message);
         } catch (error) {
             console.error("Failed to toggle favorite:", error);
             // You could show an error toast here

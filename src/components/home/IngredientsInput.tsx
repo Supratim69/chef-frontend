@@ -73,13 +73,10 @@ const IngredientsInput: React.FC<IngredientsInputProps> = ({
             if (user) {
                 try {
                     const response = await apiClient.getProfile();
-                    console.log("Full profile response:", response);
                     const dietPreference =
                         response.data?.user?.dietPreference || null;
                     setUserDietPreference(dietPreference);
-                    console.log("Loaded diet preference:", dietPreference);
 
-                    // Auto-select user's diet preference if it matches our options
                     if (dietPreference) {
                         const prefMap: Record<
                             string,

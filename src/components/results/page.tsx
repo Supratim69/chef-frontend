@@ -27,37 +27,17 @@ export default function SearchResultsPage() {
             setDietaryPrefs(dietary.split(","));
         }
 
-        console.log("🔍 Results Page - Loading results from sessionStorage");
         const storedResults = sessionStorage.getItem("searchResults");
-        console.log(
-            "📦 Results Page - Stored results from sessionStorage:",
-            storedResults
-        );
 
         if (storedResults) {
             try {
                 const results: SearchResult[] = JSON.parse(storedResults);
-                console.log(
-                    "🔍 Results Page - Parsed search results:",
-                    results
-                );
-                console.log(
-                    "📊 Results Page - Number of results:",
-                    results.length
-                );
 
                 // Ensure we never display more than 10 results
                 const limitedResults = results.slice(0, 10);
-                console.log(
-                    "🔢 Results Page - Limited to 10 results:",
-                    limitedResults.length
-                );
 
                 setSearchResults(limitedResults);
                 // sessionStorage.removeItem("searchResults");
-                console.log(
-                    "✅ Results Page - Results loaded and sessionStorage cleared"
-                );
             } catch (error) {
                 console.error(
                     "❌ Results Page - Failed to parse search results:",
@@ -100,20 +80,9 @@ export default function SearchResultsPage() {
     };
 
     // Transform search results into recipe format for the grid
-    console.log("🔄 Results Page - Starting recipe transformation");
     const recipes: RecipeDisplay[] = searchResults.map((result, index) => {
         const title = result.title || `Recipe ${result.parentId}`;
         const score = result.score || 0;
-
-        console.log(`🍳 Results Page - Processing recipe ${index + 1}:`, {
-            id: result.parentId,
-            title: title,
-            score: score,
-            snippet: result.snippet,
-            instructions: result.instructions
-                ? result.instructions.substring(0, 100) + "..."
-                : "No instructions",
-        });
 
         return {
             id: result.recipeId || result.parentId, // Use UUID if available, fallback to parentId
@@ -139,12 +108,6 @@ export default function SearchResultsPage() {
             instructions: result.instructions, // Pass instructions from backend
         };
     });
-
-    console.log("🎯 Results Page - Final transformed recipes:", recipes.length);
-    console.log(
-        "📋 Results Page - Recipe titles:",
-        recipes.map((r) => r.title)
-    );
 
     if (loading) {
         return (

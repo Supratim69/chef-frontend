@@ -22,10 +22,6 @@ class ApiClient {
     }
 
     private async handleResponse<T>(response: Response): Promise<T> {
-        console.log(
-            `🌐 API Client - Response status: ${response.status} ${response.statusText}`
-        );
-
         if (!response.ok) {
             const errorData: ApiError = await response.json().catch(() => ({
                 error: "network_error",
@@ -33,10 +29,6 @@ class ApiClient {
                 statusCode: response.status,
             }));
 
-            console.error(
-                `❌ API Client - HTTP Error ${response.status}:`,
-                errorData
-            );
             throw new Error(
                 errorData.message ||
                     `Request failed with status ${response.status}`
@@ -44,7 +36,6 @@ class ApiClient {
         }
 
         const responseData = await response.json();
-        console.log("✅ API Client - Response data:", responseData);
         return responseData;
     }
 
@@ -68,25 +59,20 @@ class ApiClient {
 
     // Authentication methods using manual auth client
     async signUp(data: SignUpData) {
-        console.log("🔐 API Client - Signing up user");
         return authClient.signUp(data);
     }
 
     async signIn(data: SignInData) {
-        console.log("🔐 API Client - Signing in user");
         return authClient.signIn(data);
     }
 
     async signOut() {
-        console.log("🔐 API Client - Signing out user");
         return authClient.signOut();
     }
 
     async getSession() {
         try {
-            console.log("🔐 API Client - Getting session from manual auth");
             const session = await authClient.getSession();
-            console.log("✅ API Client - Session retrieved:", session);
             return { data: session.data };
         } catch (error) {
             console.error("❌ API Client - Session retrieval failed:", error);
@@ -96,21 +82,15 @@ class ApiClient {
 
     // Profile methods using manual auth
     async getProfile() {
-        console.log("👤 API Client - Getting user profile from manual auth");
         return authClient.getSession(); // Profile data is included in session response
     }
 
     async updateProfileData(data: { name: string; dietPreference?: string }) {
-        console.log(
-            "👤 API Client - Updating user profile through manual auth"
-        );
         return authClient.updateProfile(data);
     }
 
     // Favorites methods
     async getFavorites(): Promise<FavoritesResponse> {
-        console.log("❤️ API Client - Getting user favorites");
-
         // Get current user session to get userId
         const session = await this.getSession();
         if (!session.data?.user?.id) {
@@ -126,8 +106,6 @@ class ApiClient {
     async addFavorite(
         recipe: AddFavoriteRequest
     ): Promise<ApiResponse<Favorite>> {
-        console.log("❤️ API Client - Adding recipe to favorites:", recipe);
-
         // Get current user session to get userId
         const session = await this.getSession();
         if (!session.data?.user?.id) {
@@ -145,11 +123,6 @@ class ApiClient {
     }
 
     async removeFavorite(recipeId: string): Promise<ApiResponse<void>> {
-        console.log(
-            "❤️ API Client - Removing recipe from favorites:",
-            recipeId
-        );
-
         // Get current user session to get userId
         const session = await this.getSession();
         if (!session.data?.user?.id) {
@@ -168,11 +141,6 @@ class ApiClient {
     async getFavoriteStatus(
         recipeId: string
     ): Promise<{ isFavorited: boolean }> {
-        console.log(
-            "❤️ API Client - Checking favorite status for recipe:",
-            recipeId
-        );
-
         // Get current user session to get userId
         const session = await this.getSession();
         if (!session.data?.user?.id) {
@@ -189,11 +157,6 @@ class ApiClient {
         action: "added" | "removed";
         favorite?: Favorite;
     }> {
-        console.log(
-            "❤️ API Client - Toggling favorite status for recipe:",
-            recipe
-        );
-
         // Get current user session to get userId
         const session = await this.getSession();
         if (!session.data?.user?.id) {
@@ -306,10 +269,6 @@ class ApiClient {
         ingredients: string[],
         dietaryPrefs?: string[]
     ): Promise<SearchResult[]> {
-        console.log("🔧 API Client - Starting recipe search request");
-        console.log("📝 API Client - Ingredients:", ingredients);
-        console.log("🥗 API Client - Dietary preferences:", dietaryPrefs);
-
         // Create search query from ingredients
         const query = ingredients.join(" ");
 
@@ -358,9 +317,6 @@ class ApiClient {
             filters: Object.keys(filters).length > 0 ? filters : undefined,
         };
 
-        console.log("📤 API Client - Request body:", requestBody);
-        console.log("🌐 API Client - Making request to /api/search");
-
         try {
             const response = await this.makeRequest<SearchResponse>(
                 "/api/search",
@@ -369,14 +325,6 @@ class ApiClient {
                     body: JSON.stringify(requestBody),
                 }
             );
-
-            console.log("✅ API Client - Search API response received");
-            console.log("📊 API Client - Response data:", response);
-            console.log(
-                "📈 API Client - Number of results:",
-                response.results?.length || 0
-            );
-
             return response.results || [];
         } catch (error) {
             console.error("❌ API Client - Search request failed:", error);

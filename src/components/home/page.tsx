@@ -311,38 +311,20 @@ export default function HomePage() {
                 .map(([key]) => key);
 
             // Search recipes using the API (direct Pinecone search)
-            console.log(
-                "🔍 Home Page - Starting recipe search with ingredients:",
-                ingredients
-            );
-            console.log(
-                "🥗 Home Page - Dietary preferences:",
-                selectedDietaryPrefs
-            );
-            console.log(
-                "🚀 Home Page - Calling searchRecipesByIngredients API"
-            );
-
             const searchResults = await apiClient.searchRecipesByIngredients(
                 ingredients,
                 selectedDietaryPrefs
             );
 
-            console.log("📊 Home Page - Search API Response:", searchResults);
-            console.log(
-                "📈 Home Page - Number of results found:",
-                searchResults.length
-            );
-
-            // Log each result for debugging
-            searchResults.forEach((result, index) => {
-                console.log(`🍳 Home Page - Result ${index + 1}:`, {
-                    parentId: result.parentId,
-                    score: result.score,
-                    title: result.title,
-                    snippet: result.snippet,
-                });
-            });
+            // // Log each result for debugging
+            // searchResults.forEach((result, index) => {
+            //     console.log(`🍳 Home Page - Result ${index + 1}:`, {
+            //         parentId: result.parentId,
+            //         score: result.score,
+            //         title: result.title,
+            //         snippet: result.snippet,
+            //     });
+            // });
 
             // Navigate to search results page with the results
             const searchParams = new URLSearchParams({
@@ -350,15 +332,11 @@ export default function HomePage() {
                 dietary: selectedDietaryPrefs.join(","),
             });
 
-            console.log("💾 Home Page - Storing results in sessionStorage");
             sessionStorage.setItem(
                 "searchResults",
                 JSON.stringify(searchResults)
             );
             sessionStorage.setItem("searchQuery", ingredients.join(", "));
-            console.log(
-                "✅ Home Page - Results stored, navigating to search page"
-            );
 
             // Track recipe search
             analytics.trackRecipeSearch(

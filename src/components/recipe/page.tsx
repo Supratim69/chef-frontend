@@ -37,14 +37,6 @@ export default function RecipeDetailsPage({
     try {
         if (recipeData) {
             parsedRecipeData = JSON.parse(decodeURIComponent(recipeData));
-            console.log(
-                "🔍 Recipe Page - Parsed recipe data:",
-                parsedRecipeData
-            );
-            console.log(
-                "🔍 Recipe Page - Full recipe data:",
-                parsedRecipeData?.fullRecipe
-            );
         }
     } catch (error) {
         console.error("Failed to parse recipe data:", error);
@@ -125,12 +117,6 @@ export default function RecipeDetailsPage({
               ],
           };
 
-    // Parse ingredients from metadata (which contains the ingredients array from Pinecone)
-    console.log("🔍 Recipe Page - Ingredients check:", {
-        hasMetadataIngredients: !!parsedRecipeData?.metadata?.ingredients,
-        metadataIngredients: parsedRecipeData?.metadata?.ingredients,
-    });
-
     const ingredients = parsedRecipeData?.metadata?.ingredients
         ? (Array.isArray(parsedRecipeData.metadata.ingredients)
               ? parsedRecipeData.metadata.ingredients
@@ -156,25 +142,6 @@ export default function RecipeDetailsPage({
               { text: "Salt and black pepper to taste", available: true },
               { text: "Fresh parsley, chopped, for garnish", available: true },
           ];
-
-    // Parse instructions from the backend data
-    console.log("🔍 Recipe Page - Available data:", {
-        hasSnippet: !!parsedRecipeData?.snippet,
-        snippet: parsedRecipeData?.snippet,
-        title: parsedRecipeData?.title,
-        hasInstructions: !!(
-            parsedRecipeData?.instructions ||
-            parsedRecipeData?.metadata?.instructions
-        ),
-        instructions:
-            parsedRecipeData?.instructions ||
-            parsedRecipeData?.metadata?.instructions
-                ? (
-                      parsedRecipeData.instructions ||
-                      parsedRecipeData.metadata.instructions
-                  ).substring(0, 100) + "..."
-                : "No instructions",
-    });
 
     // Function to parse instructions into steps
     const parseInstructions = (instructionsText: string): string[] => {
