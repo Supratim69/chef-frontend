@@ -147,11 +147,69 @@ const IngredientsInput: React.FC<IngredientsInputProps> = ({
             }
         } catch (error) {
             console.error("Image upload failed:", error);
-            const errorMessage =
-                error instanceof Error
-                    ? error.message
-                    : "Failed to process image";
-            alert(`Upload failed: ${errorMessage}. Please try again.`);
+
+            // Handle different types of errors with user-friendly messages
+            let userMessage =
+                "Something went wrong while processing your image.";
+            let showTips = true;
+
+            if (error instanceof Error) {
+                const errorMessage = error.message.toLowerCase();
+                const errorType = (error as any).type;
+
+                // Check for specific error types from backend
+                if (
+                    errorType === "no_food_detected" ||
+                    errorMessage.includes("doesn't appear to be a food image")
+                ) {
+                    userMessage =
+                        "🤔 This doesn't look like a food image.\n\nPlease try uploading a photo of ingredients like vegetables, fruits, spices, or other food items.";
+                    showTips = false;
+                } else if (
+                    errorType === "no_ingredients_detected" ||
+                    errorMessage.includes("no ingredients were detected")
+                ) {
+                    userMessage =
+                        "🔍 We couldn't detect any ingredients in this image.\n\nTry taking a clearer, well-lit photo where the ingredients are clearly visible.";
+                } else if (
+                    errorType === "invalid_response" ||
+                    errorMessage.includes("could not process")
+                ) {
+                    userMessage =
+                        "⚠️ We had trouble analyzing this image.\n\nPlease try again with a different photo.";
+                } else if (errorMessage.includes("invalid file type")) {
+                    userMessage =
+                        "📷 Invalid file type.\n\nPlease upload a JPEG, PNG, WebP, or GIF image.";
+                    showTips = false;
+                } else if (
+                    errorMessage.includes("file too large") ||
+                    errorMessage.includes("too large")
+                ) {
+                    userMessage =
+                        "📏 Image is too large.\n\nPlease use an image smaller than 10MB.";
+                    showTips = false;
+                } else if (
+                    errorMessage.includes("network") ||
+                    errorMessage.includes("fetch failed")
+                ) {
+                    userMessage =
+                        "🌐 Network error.\n\nPlease check your internet connection and try again.";
+                    showTips = false;
+                } else if (
+                    errorMessage.includes("internal_error") ||
+                    errorMessage.includes("internal error")
+                ) {
+                    userMessage =
+                        "⚠️ Our image processing service is temporarily unavailable.\n\nPlease try again in a few moments.";
+                    showTips = false;
+                }
+            }
+
+            // Show user-friendly alert with conditional tips
+            const tipsText = showTips
+                ? "\n\n💡 Tips for better results:\n• Use good lighting\n• Focus on the ingredients\n• Avoid blurry photos\n• Make sure food items are clearly visible"
+                : "";
+            alert(`${userMessage}${tipsText}`);
         } finally {
             setUploadingImage(false);
             setUploadingFrom(null);
