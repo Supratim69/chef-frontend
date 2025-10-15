@@ -177,23 +177,24 @@ class ApiClient {
         });
 
         if (!response.ok) {
-            const errorData = await response
-                .json()
-                .catch(() => ({
-                    error: "Upload failed",
-                    message: "Network error occurred",
-                }));
+            const errorData = await response.json().catch(() => ({
+                error: "Upload failed",
+                message: "Network error occurred",
+            }));
 
             // Create a more descriptive error message
             const errorMessage =
                 errorData.message ||
                 errorData.error ||
                 `Upload failed with status ${response.status}`;
-            const error = new Error(errorMessage);
+            const error = new Error(errorMessage) as Error & {
+                type?: string;
+                statusCode?: number;
+            };
 
             // Attach the error type for better handling
-            (error as any).type = errorData.error;
-            (error as any).statusCode = response.status;
+            error.type = errorData.error;
+            error.statusCode = response.status;
 
             throw error;
         }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiClient } from "@/lib/api-client";
+import Dialog from "@/components/ui/Dialog";
 
 interface DietaryPreferences {
     vegan: boolean;
@@ -43,6 +44,21 @@ const IngredientsInput: React.FC<IngredientsInputProps> = ({
     >(null);
 
     const [isMobile, setIsMobile] = useState(false);
+    const [dialog, setDialog] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        type: "error" | "success" | "warning" | "info";
+        showTips: boolean;
+        tips: string[];
+    }>({
+        isOpen: false,
+        title: "",
+        message: "",
+        type: "info",
+        showTips: false,
+        tips: [],
+    });
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Detect mobile device after component mounts
@@ -94,6 +110,28 @@ const IngredientsInput: React.FC<IngredientsInputProps> = ({
         );
     };
 
+    // Helper function to show dialog
+    const showDialog = (
+        title: string,
+        message: string,
+        type: "error" | "success" | "warning" | "info" = "info",
+        showTips: boolean = false,
+        tips: string[] = []
+    ) => {
+        setDialog({
+            isOpen: true,
+            title,
+            message,
+            type,
+            showTips,
+            tips,
+        });
+    };
+
+    const closeDialog = () => {
+        setDialog((prev) => ({ ...prev, isOpen: false }));
+    };
+
     const handleImageUpload = async (
         event: React.ChangeEvent<HTMLInputElement>
     ) => {
@@ -109,13 +147,21 @@ const IngredientsInput: React.FC<IngredientsInputProps> = ({
             "image/gif",
         ];
         if (!allowedTypes.includes(file.type)) {
-            alert("Please select a valid image file (JPEG, PNG, WebP, or GIF)");
+            showDialog(
+                "Invalid File Type",
+                "Please select a valid image file (JPEG, PNG, WebP, or GIF).",
+                "error"
+            );
             return;
         }
 
         // Validate file size (max 10MB to match backend)
         if (file.size > 10 * 1024 * 1024) {
-            alert("Image size should be less than 10MB");
+            showDialog(
+                "File Too Large",
+                "Image size should be less than 10MB.\n\nTry compressing your image or choosing a smaller file.",
+                "error"
+            );
             return;
         }
 
@@ -136,80 +182,120 @@ const IngredientsInput: React.FC<IngredientsInputProps> = ({
                     // Use the batch add function which handles duplicates and feedback
                     addMultipleIngredients(extractedIngredients);
                 } else {
-                    alert(
-                        "No valid ingredients were detected in the image. Please try a clearer photo."
+                    showDialog(
+                        "No Ingredients Found",
+                        "No valid ingredients were detected in the image.\n\nPlease try a clearer photo with visible food ingredients.",
+                        "warning",
+                        true,
+                        [
+                            "Use good lighting",
+                            "Focus on the ingredients",
+                            "Avoid blurry photos",
+                            "Make sure food items are clearly visible",
+                        ]
                     );
                 }
             } else {
-                alert(
-                    "No ingredients were detected in the image. Please try a clearer photo."
+                showDialog(
+                    "No Ingredients Found",
+                    "No ingredients were detected in the image.\n\nPlease try a clearer photo with visible food ingredients.",
+                    "warning",
+                    true,
+                    [
+                        "Use good lighting",
+                        "Focus on the ingredients",
+                        "Avoid blurry photos",
+                        "Make sure food items are clearly visible",
+                    ]
                 );
             }
         } catch (error) {
             console.error("Image upload failed:", error);
 
             // Handle different types of errors with user-friendly messages
-            let userMessage =
-                "Something went wrong while processing your image.";
+            let title = "Upload Error";
+            let message = "Something went wrong while processing your image.";
+            let dialogType: "error" | "warning" = "error";
             let showTips = true;
+            let tips = [
+                "Use good lighting",
+                "Focus on the ingredients",
+                "Avoid blurry photos",
+                "Make sure food items are clearly visible",
+            ];
 
             if (error instanceof Error) {
                 const errorMessage = error.message.toLowerCase();
-                const errorType = (error as any).type;
+                const errorType = (error as Error & { type?: string }).type;
 
                 // Check for specific error types from backend
                 if (
                     errorType === "no_food_detected" ||
                     errorMessage.includes("doesn't appear to be a food image")
                 ) {
-                    userMessage =
-                        "🤔 This doesn't look like a food image.\n\nPlease try uploading a photo of ingredients like vegetables, fruits, spices, or other food items.";
+                    title = "Not a Food Image";
+                    message =
+                        "This doesn't look like a food image.\n\nPlease try uploading a photo of ingredients like vegetables, fruits, spices, or other food items.";
+                    dialogType = "warning";
                     showTips = false;
+                    tips = [];
                 } else if (
                     errorType === "no_ingredients_detected" ||
                     errorMessage.includes("no ingredients were detected")
                 ) {
-                    userMessage =
-                        "🔍 We couldn't detect any ingredients in this image.\n\nTry taking a clearer, well-lit photo where the ingredients are clearly visible.";
+                    title = "No Ingredients Found";
+                    message =
+                        "We couldn't detect any ingredients in this image.\n\nTry taking a clearer, well-lit photo where the ingredients are clearly visible.";
+                    dialogType = "warning";
                 } else if (
                     errorType === "invalid_response" ||
                     errorMessage.includes("could not process")
                 ) {
-                    userMessage =
-                        "⚠️ We had trouble analyzing this image.\n\nPlease try again with a different photo.";
+                    title = "Processing Error";
+                    message =
+                        "We had trouble analyzing this image.\n\nPlease try again with a different photo.";
+                    dialogType = "error";
                 } else if (errorMessage.includes("invalid file type")) {
-                    userMessage =
-                        "📷 Invalid file type.\n\nPlease upload a JPEG, PNG, WebP, or GIF image.";
+                    title = "Invalid File Type";
+                    message = "Please upload a JPEG, PNG, WebP, or GIF image.";
+                    dialogType = "error";
                     showTips = false;
+                    tips = [];
                 } else if (
                     errorMessage.includes("file too large") ||
                     errorMessage.includes("too large")
                 ) {
-                    userMessage =
-                        "📏 Image is too large.\n\nPlease use an image smaller than 10MB.";
+                    title = "File Too Large";
+                    message =
+                        "Image is too large.\n\nPlease use an image smaller than 10MB.";
+                    dialogType = "error";
                     showTips = false;
+                    tips = [];
                 } else if (
                     errorMessage.includes("network") ||
                     errorMessage.includes("fetch failed")
                 ) {
-                    userMessage =
-                        "🌐 Network error.\n\nPlease check your internet connection and try again.";
+                    title = "Network Error";
+                    message =
+                        "Please check your internet connection and try again.";
+                    dialogType = "error";
                     showTips = false;
+                    tips = [];
                 } else if (
                     errorMessage.includes("internal_error") ||
                     errorMessage.includes("internal error")
                 ) {
-                    userMessage =
-                        "⚠️ Our image processing service is temporarily unavailable.\n\nPlease try again in a few moments.";
+                    title = "Service Unavailable";
+                    message =
+                        "Our image processing service is temporarily unavailable.\n\nPlease try again in a few moments.";
+                    dialogType = "error";
                     showTips = false;
+                    tips = [];
                 }
             }
 
-            // Show user-friendly alert with conditional tips
-            const tipsText = showTips
-                ? "\n\n💡 Tips for better results:\n• Use good lighting\n• Focus on the ingredients\n• Avoid blurry photos\n• Make sure food items are clearly visible"
-                : "";
-            alert(`${userMessage}${tipsText}`);
+            // Show dialog with appropriate configuration
+            showDialog(title, message, dialogType, showTips, tips);
         } finally {
             setUploadingImage(false);
             setUploadingFrom(null);
@@ -275,107 +361,151 @@ const IngredientsInput: React.FC<IngredientsInputProps> = ({
         return colors[color as keyof typeof colors] || colors.orange;
     };
     return (
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
-            <h3 className="font-semibold text-gray-800 mb-4">
-                What ingredients do you have?
-            </h3>
+        <>
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
+                <h3 className="font-semibold text-gray-800 mb-4">
+                    What ingredients do you have?
+                </h3>
 
-            {/* Input with Add Button */}
-            <div className="flex gap-2 mb-4">
-                <div className="flex-1 relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                        🍴
-                    </span>
-                    <input
-                        type="text"
-                        placeholder="e.g., chicken, broccoli, pasta (separate multiple with commas)"
-                        value={ingredientInput}
-                        onChange={(e) => setIngredientInput(e.target.value)}
-                        onKeyPress={handleKeyPress}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
-                    />
-                </div>
-                <button
-                    onClick={addIngredient}
-                    className="bg-cyan-400 text-white p-3 rounded-xl hover:bg-cyan-500 transition-colors"
-                >
-                    <svg
-                        className="w-6 h-6"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 4v16m8-8H4"
+                {/* Input with Add Button */}
+                <div className="flex gap-2 mb-4">
+                    <div className="flex-1 relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                            🍴
+                        </span>
+                        <input
+                            type="text"
+                            placeholder="e.g., chicken, broccoli, pasta (separate multiple with commas)"
+                            value={ingredientInput}
+                            onChange={(e) => setIngredientInput(e.target.value)}
+                            onKeyPress={handleKeyPress}
+                            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
                         />
-                    </svg>
-                </button>
-            </div>
-
-            {/* Photo Options */}
-            <div className="mb-4">
-                {/* Hidden file inputs */}
-                <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                />
-
-                {/* Conditional rendering based on device type */}
-                {isMobile ? (
-                    /* Mobile: Show both camera and gallery options */
-                    <div className="grid grid-cols-2 gap-2">
-                        <button
-                            onClick={() => {
-                                setUploadingFrom("camera");
-                                // Set capture attribute for camera
-                                if (fileInputRef.current) {
-                                    fileInputRef.current.setAttribute(
-                                        "capture",
-                                        "environment"
-                                    );
-                                    fileInputRef.current.click();
-                                }
-                            }}
-                            disabled={uploadingImage}
-                            className="py-3 border border-cyan-200 bg-cyan-50 rounded-lg text-cyan-700 text-sm font-medium flex items-center justify-center gap-2 hover:bg-cyan-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    </div>
+                    <button
+                        onClick={addIngredient}
+                        className="bg-cyan-400 text-white p-3 rounded-xl hover:bg-cyan-500 transition-colors"
+                    >
+                        <svg
+                            className="w-6 h-6"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
                         >
-                            {uploadingImage && uploadingFrom === "camera" ? (
-                                <>
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-cyan-500"></div>
-                                    Processing...
-                                </>
-                            ) : (
-                                <>
-                                    <svg
-                                        className="w-5 h-5"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                                        />
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                                        />
-                                    </svg>
-                                    Camera
-                                </>
-                            )}
-                        </button>
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 4v16m8-8H4"
+                            />
+                        </svg>
+                    </button>
+                </div>
 
+                {/* Photo Options */}
+                <div className="mb-4">
+                    {/* Hidden file inputs */}
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                    />
+
+                    {/* Conditional rendering based on device type */}
+                    {isMobile ? (
+                        /* Mobile: Show both camera and gallery options */
+                        <div className="grid grid-cols-2 gap-2">
+                            <button
+                                onClick={() => {
+                                    setUploadingFrom("camera");
+                                    // Set capture attribute for camera
+                                    if (fileInputRef.current) {
+                                        fileInputRef.current.setAttribute(
+                                            "capture",
+                                            "environment"
+                                        );
+                                        fileInputRef.current.click();
+                                    }
+                                }}
+                                disabled={uploadingImage}
+                                className="py-3 border border-cyan-200 bg-cyan-50 rounded-lg text-cyan-700 text-sm font-medium flex items-center justify-center gap-2 hover:bg-cyan-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                {uploadingImage &&
+                                uploadingFrom === "camera" ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-cyan-500"></div>
+                                        Processing...
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg
+                                            className="w-5 h-5"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                                            />
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                                            />
+                                        </svg>
+                                        Camera
+                                    </>
+                                )}
+                            </button>
+
+                            <button
+                                onClick={() => {
+                                    setUploadingFrom("gallery");
+                                    // Remove capture attribute for gallery
+                                    if (fileInputRef.current) {
+                                        fileInputRef.current.removeAttribute(
+                                            "capture"
+                                        );
+                                        fileInputRef.current.click();
+                                    }
+                                }}
+                                disabled={uploadingImage}
+                                className="py-3 border border-gray-200 rounded-lg text-gray-600 text-sm font-medium flex items-center justify-center gap-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                {uploadingImage &&
+                                uploadingFrom === "gallery" ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-cyan-500"></div>
+                                        Processing...
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg
+                                            className="w-5 h-5"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                            />
+                                        </svg>
+                                        Gallery
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    ) : (
+                        /* Desktop: Show only gallery option */
                         <button
                             onClick={() => {
                                 setUploadingFrom("gallery");
@@ -388,12 +518,12 @@ const IngredientsInput: React.FC<IngredientsInputProps> = ({
                                 }
                             }}
                             disabled={uploadingImage}
-                            className="py-3 border border-gray-200 rounded-lg text-gray-600 text-sm font-medium flex items-center justify-center gap-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="w-full py-3 border border-gray-200 rounded-lg text-gray-600 text-sm font-medium flex items-center justify-center gap-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
-                            {uploadingImage && uploadingFrom === "gallery" ? (
+                            {uploadingImage ? (
                                 <>
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-cyan-500"></div>
-                                    Processing...
+                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-cyan-500"></div>
+                                    Processing image...
                                 </>
                             ) : (
                                 <>
@@ -410,109 +540,82 @@ const IngredientsInput: React.FC<IngredientsInputProps> = ({
                                             d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                                         />
                                     </svg>
-                                    Gallery
+                                    Upload photo of ingredients
                                 </>
                             )}
                         </button>
-                    </div>
-                ) : (
-                    /* Desktop: Show only gallery option */
-                    <button
-                        onClick={() => {
-                            setUploadingFrom("gallery");
-                            // Remove capture attribute for gallery
-                            if (fileInputRef.current) {
-                                fileInputRef.current.removeAttribute("capture");
-                                fileInputRef.current.click();
-                            }
-                        }}
-                        disabled={uploadingImage}
-                        className="w-full py-3 border border-gray-200 rounded-lg text-gray-600 text-sm font-medium flex items-center justify-center gap-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                        {uploadingImage ? (
-                            <>
-                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-cyan-500"></div>
-                                Processing image...
-                            </>
-                        ) : (
-                            <>
-                                <svg
-                                    className="w-5 h-5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                    />
-                                </svg>
-                                Upload photo of ingredients
-                            </>
-                        )}
-                    </button>
-                )}
-            </div>
-
-            {/* Dietary Preferences */}
-            <div className="mb-4">
-                <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-sm font-semibold text-gray-700">
-                        Dietary Preferences:
-                    </h4>
-                    {userDietPreference && (
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                            Profile: {userDietPreference}
-                        </span>
                     )}
                 </div>
-                <div className="flex flex-wrap gap-2">
-                    {visibleOptions.map((option) => (
-                        <button
-                            key={option.key}
-                            onClick={() => toggleDietaryPref(option.key)}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${getButtonColor(
-                                option.color,
-                                dietaryPrefs[option.key]
-                            )}`}
-                        >
-                            {option.label}
-                        </button>
-                    ))}
+
+                {/* Dietary Preferences */}
+                <div className="mb-4">
+                    <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-semibold text-gray-700">
+                            Dietary Preferences:
+                        </h4>
+                        {userDietPreference && (
+                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                Profile: {userDietPreference}
+                            </span>
+                        )}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {visibleOptions.map((option) => (
+                            <button
+                                key={option.key}
+                                onClick={() => toggleDietaryPref(option.key)}
+                                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${getButtonColor(
+                                    option.color,
+                                    dietaryPrefs[option.key]
+                                )}`}
+                            >
+                                {option.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Your Ingredients */}
+                <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                        Your Ingredients:
+                    </h4>
+                    {ingredients.length === 0 ? (
+                        <p className="text-gray-500 text-sm">
+                            No ingredients added yet. Add some above!
+                        </p>
+                    ) : (
+                        <div className="flex flex-wrap gap-2">
+                            {ingredients.map((ingredient, index) => (
+                                <span
+                                    key={index}
+                                    className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm flex items-center gap-2"
+                                >
+                                    {ingredient}
+                                    <button
+                                        onClick={() => removeIngredient(index)}
+                                        className="text-gray-500 hover:text-gray-700 transition-colors"
+                                    >
+                                        ✕
+                                    </button>
+                                </span>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* Your Ingredients */}
-            <div>
-                <h4 className="text-sm font-semibold text-gray-700 mb-3">
-                    Your Ingredients:
-                </h4>
-                {ingredients.length === 0 ? (
-                    <p className="text-gray-500 text-sm">
-                        No ingredients added yet. Add some above!
-                    </p>
-                ) : (
-                    <div className="flex flex-wrap gap-2">
-                        {ingredients.map((ingredient, index) => (
-                            <span
-                                key={index}
-                                className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm flex items-center gap-2"
-                            >
-                                {ingredient}
-                                <button
-                                    onClick={() => removeIngredient(index)}
-                                    className="text-gray-500 hover:text-gray-700 transition-colors"
-                                >
-                                    ✕
-                                </button>
-                            </span>
-                        ))}
-                    </div>
-                )}
-            </div>
-        </div>
+            {/* Dialog */}
+            <Dialog
+                isOpen={dialog.isOpen}
+                onClose={closeDialog}
+                title={dialog.title}
+                message={dialog.message}
+                type={dialog.type}
+                showTips={dialog.showTips}
+                tips={dialog.tips}
+            />
+        </>
     );
 };
 

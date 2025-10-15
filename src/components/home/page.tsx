@@ -9,6 +9,7 @@ import ActionButtons from "./ActionButtons";
 import AppLayout from "@/components/layout/AppLayout";
 import { apiClient } from "@/lib/api-client";
 import { analytics } from "@/lib/analytics";
+import Dialog from "@/components/ui/Dialog";
 
 export default function HomePage() {
     const [ingredientInput, setIngredientInput] = useState("");
@@ -20,6 +21,21 @@ export default function HomePage() {
         glutenFree: false,
     });
     const [isSearching, setIsSearching] = useState(false);
+    const [dialog, setDialog] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        type: "error" | "success" | "warning" | "info";
+        showTips: boolean;
+        tips: string[];
+    }>({
+        isOpen: false,
+        title: "",
+        message: "",
+        type: "info",
+        showTips: false,
+        tips: [],
+    });
     const router = useRouter();
 
     // Load ingredients and dietary preferences from localStorage on component mount
@@ -80,6 +96,28 @@ export default function HomePage() {
             );
         }
     }, [dietaryPrefs]);
+
+    // Helper function to show dialog
+    const showDialog = (
+        title: string,
+        message: string,
+        type: "error" | "success" | "warning" | "info" = "info",
+        showTips: boolean = false,
+        tips: string[] = []
+    ) => {
+        setDialog({
+            isOpen: true,
+            title,
+            message,
+            type,
+            showTips,
+            tips,
+        });
+    };
+
+    const closeDialog = () => {
+        setDialog((prev) => ({ ...prev, isOpen: false }));
+    };
 
     const addIngredient = () => {
         const trimmedInput = ingredientInput.trim();
@@ -150,10 +188,12 @@ export default function HomePage() {
                     );
                 }
             } else if (duplicates.length > 0) {
-                alert(
-                    `All ingredients are already in the list: ${duplicates.join(
+                showDialog(
+                    "Duplicate Ingredients",
+                    `All ingredients are already in the list:\n\n${duplicates.join(
                         ", "
-                    )}`
+                    )}`,
+                    "warning"
                 );
             }
 
@@ -212,10 +252,12 @@ export default function HomePage() {
                 } ingredient(s): ${newIngredients.join(", ")}`
             );
         } else if (duplicates.length > 0) {
-            alert(
-                `All ingredients are already in the list: ${duplicates.join(
+            showDialog(
+                "Duplicate Ingredients",
+                `All ingredients are already in the list:\n\n${duplicates.join(
                     ", "
-                )}`
+                )}`,
+                "warning"
             );
         }
     };
@@ -253,7 +295,11 @@ export default function HomePage() {
 
     const handleSearch = async () => {
         if (ingredients.length === 0) {
-            alert("Please add at least one ingredient!");
+            showDialog(
+                "No Ingredients Added",
+                "Please add at least one ingredient to search for recipes!\n\nYou can type ingredients manually or upload a photo.",
+                "warning"
+            );
             return;
         }
 
@@ -324,7 +370,11 @@ export default function HomePage() {
             router.push(`/search?${searchParams.toString()}`);
         } catch (error) {
             console.error("Search failed:", error);
-            alert("Search failed. Please try again.");
+            showDialog(
+                "Search Failed",
+                "We couldn't search for recipes right now.\n\nPlease check your internet connection and try again.",
+                "error"
+            );
         } finally {
             setIsSearching(false);
         }
@@ -371,6 +421,17 @@ export default function HomePage() {
                     {/* <RecipeList recipes={recipes} /> */}
                 </div>
             </div>
+
+            {/* Dialog */}
+            <Dialog
+                isOpen={dialog.isOpen}
+                onClose={closeDialog}
+                title={dialog.title}
+                message={dialog.message}
+                type={dialog.type}
+                showTips={dialog.showTips}
+                tips={dialog.tips}
+            />
         </AppLayout>
     );
 }
