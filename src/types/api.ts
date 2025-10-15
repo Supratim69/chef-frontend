@@ -43,6 +43,7 @@ export interface RecipeDisplay {
     image: string;
     score?: number;
     missingIngredients?: string[];
+    instructions?: string; // Add instructions field
     metadata?: Record<string, unknown>;
     fullRecipe?: {
         ingredients: string;
@@ -101,6 +102,7 @@ export interface SearchResult {
     score: number;
     title: string;
     snippet: string;
+    instructions?: string; // Add instructions field from backend
     matchedChunks: Array<{
         id: string;
         score: number;
@@ -129,6 +131,7 @@ export interface MatchResult {
     score?: number;
     matchScore?: number;
     missingIngredients: string[];
+    instructions?: string; // Add instructions field from backend
     recipe?: Record<string, unknown>;
     fullRecipeSnippet?: string;
     metadata?: Record<string, unknown>;

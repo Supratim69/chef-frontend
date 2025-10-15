@@ -90,6 +90,7 @@ export default function SearchResultsPage() {
             score: recipe.score,
             metadata: recipe.metadata,
             fullRecipe: recipe.fullRecipe,
+            instructions: recipe.instructions, // Include instructions
         };
 
         const encodedData = encodeURIComponent(JSON.stringify(recipeData));
@@ -107,6 +108,9 @@ export default function SearchResultsPage() {
             title: title,
             score: score,
             snippet: result.snippet,
+            instructions: result.instructions
+                ? result.instructions.substring(0, 100) + "..."
+                : "No instructions",
         });
 
         return {
@@ -130,6 +134,7 @@ export default function SearchResultsPage() {
             score: score,
             metadata: result.matchedChunks?.[0]?.metadata || {},
             fullRecipe: result.fullRecipe || undefined,
+            instructions: result.instructions, // Pass instructions from backend
         };
     });
 

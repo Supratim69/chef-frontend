@@ -156,30 +156,67 @@ export default function RecipeDetailsPage({
               { text: "Fresh parsley, chopped, for garnish", available: true },
           ];
 
-    // For instructions, we'll use a generic message since full instructions aren't available in metadata
-    // The actual recipe instructions are embedded in the chunks but not easily reconstructable
+    // Parse instructions from the backend data
     console.log("🔍 Recipe Page - Available data:", {
         hasSnippet: !!parsedRecipeData?.snippet,
         snippet: parsedRecipeData?.snippet,
         title: parsedRecipeData?.title,
+        hasInstructions: !!(
+            parsedRecipeData?.instructions ||
+            parsedRecipeData?.metadata?.instructions
+        ),
+        instructions:
+            parsedRecipeData?.instructions ||
+            parsedRecipeData?.metadata?.instructions
+                ? (
+                      parsedRecipeData.instructions ||
+                      parsedRecipeData.metadata.instructions
+                  ).substring(0, 100) + "..."
+                : "No instructions",
     });
 
-    const instructions = parsedRecipeData?.title
-        ? [
-              `This is a recipe for ${parsedRecipeData.title}.`,
-              "The detailed cooking instructions are embedded in our search system but not fully available for display.",
-              "Please refer to the original recipe source for complete step-by-step instructions.",
-              parsedRecipeData.snippet
-                  ? `Recipe preview: ${parsedRecipeData.snippet}`
-                  : "",
-          ].filter(Boolean)
-        : [
-              "Rinse lentils under cold water. Set aside.",
-              "Heat olive oil in a large pot or Dutch oven over medium heat. Add chopped onions, carrots, and celery. Sauté until softened, about 5-7 minutes.",
-              "Stir in minced garlic and cook for another minute until fragrant. Add the rinsed lentils, diced tomatoes, vegetable broth, bay leaf, and thyme.",
-              "Bring the soup to a boil, then reduce heat to low, cover, and simmer for 30-40 minutes, or until lentils are tender.",
-              "Remove bay leaf. Season with salt and pepper to taste. Serve hot with a sprinkle of fresh parsley.",
-          ];
+    // Function to parse instructions into steps
+    const parseInstructions = (instructionsText: string): string[] => {
+        if (!instructionsText) return [];
+
+        // Clean up the text and split into sentences
+        const cleanText = instructionsText
+            .replace(/\s+/g, " ") // Replace multiple spaces with single space
+            .trim();
+
+        // Split by common sentence endings and filter out empty strings
+        const sentences = cleanText
+            .split(/[.!?]+/)
+            .map((s) => s.trim())
+            .filter((s) => s.length > 10) // Only keep substantial sentences
+            .map((s) => s.charAt(0).toUpperCase() + s.slice(1)); // Capitalize first letter
+
+        return sentences.length > 0 ? sentences : [cleanText];
+    };
+
+    const instructions =
+        parsedRecipeData?.instructions ||
+        parsedRecipeData?.metadata?.instructions
+            ? parseInstructions(
+                  parsedRecipeData.instructions ||
+                      parsedRecipeData.metadata.instructions
+              )
+            : parsedRecipeData?.title
+            ? [
+                  `This is a recipe for ${parsedRecipeData.title}.`,
+                  "The detailed cooking instructions are embedded in our search system but not fully available for display.",
+                  "Please refer to the original recipe source for complete step-by-step instructions.",
+                  parsedRecipeData.snippet
+                      ? `Recipe preview: ${parsedRecipeData.snippet}`
+                      : "",
+              ].filter(Boolean)
+            : [
+                  "Rinse lentils under cold water. Set aside.",
+                  "Heat olive oil in a large pot or Dutch oven over medium heat. Add chopped onions, carrots, and celery. Sauté until softened, about 5-7 minutes.",
+                  "Stir in minced garlic and cook for another minute until fragrant. Add the rinsed lentils, diced tomatoes, vegetable broth, bay leaf, and thyme.",
+                  "Bring the soup to a boil, then reduce heat to low, cover, and simmer for 30-40 minutes, or until lentils are tender.",
+                  "Remove bay leaf. Season with salt and pepper to taste. Serve hot with a sprinkle of fresh parsley.",
+              ];
 
     const recipeInfoData = {
         calories: 350,
