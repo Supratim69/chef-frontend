@@ -2,6 +2,66 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api-client";
+
+// Unified type for recipe data (flexible to handle both API and URL param formats)
+interface RecipeData {
+    // Core fields
+    id?: string;
+    recipeId?: string;
+    title?: string;
+    description?: string;
+    snippet?: string;
+
+    // Images
+    image?: string;
+    imageUrl?: string;
+
+    // Content
+    ingredients?: string[] | string;
+    instructions?: string;
+
+    // Timing
+    prepTimeMins?: number;
+    cookTimeMins?: number;
+    servings?: number;
+
+    // Categories
+    cuisine?: string;
+    course?: string;
+    diet?: string;
+    tags?: string[];
+
+    // URLs
+    recipeUrl?: string;
+
+    // Timestamps
+    createdAt?: string;
+    updatedAt?: string;
+
+    // Legacy/nested data structures
+    metadata?: {
+        title?: string;
+        ingredients?: string[];
+        instructions?: string;
+        prepTime?: number;
+        cookTime?: number;
+        servings?: number;
+        cuisine?: string;
+        diet?: string;
+        course?: string;
+    };
+    fullRecipe?: {
+        ingredients?: string;
+        instructions?: string;
+        cuisine?: string;
+        course?: string;
+        diet?: string;
+        imageURL?: string;
+        prepTime?: number;
+        cookTime?: number;
+        servings?: number;
+    };
+}
 import {
     RecipeDetailsHeader,
     RecipeHeroImage,
@@ -24,20 +84,17 @@ export default function RecipeDetailsPage({
     recipeData,
 }: RecipeDetailsPageProps) {
     const router = useRouter();
-    const [fetchedRecipeData, setFetchedRecipeData] = useState<any>(null);
+    const [fetchedRecipeData, setFetchedRecipeData] =
+        useState<RecipeData | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
-    const handleStartCooking = () => {
-        alert("Starting cooking mode!");
-    };
 
     const handleBack = () => {
         router.back();
     };
 
     // Parse recipe data from URL params or use fallback
-    let parsedRecipeData = null;
+    let parsedRecipeData: RecipeData | null = null;
     try {
         if (recipeData) {
             parsedRecipeData = JSON.parse(decodeURIComponent(recipeData));
@@ -64,7 +121,7 @@ export default function RecipeDetailsPage({
                         const recipe = await apiClient.getRecipeByUuid(
                             recipeId
                         );
-                        setFetchedRecipeData(recipe);
+                        setFetchedRecipeData(recipe as RecipeData);
                     } catch (err) {
                         console.error("Failed to fetch recipe:", err);
                         setError("Failed to load recipe details");
@@ -113,7 +170,8 @@ export default function RecipeDetailsPage({
     }
 
     // Use fetched data if available, otherwise use parsed data
-    const activeRecipeData = fetchedRecipeData || parsedRecipeData;
+    const activeRecipeData: RecipeData | null =
+        fetchedRecipeData || parsedRecipeData;
 
     // Recipe data - use active data or fallback
     const recipeInfo = activeRecipeData
@@ -130,60 +188,63 @@ export default function RecipeDetailsPage({
                   activeRecipeData.imageUrl ||
                   activeRecipeData.image ||
                   "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800&h=300&fit=crop",
-              prepTime: activeRecipeData.prepTimeMins
+              prepTime: activeRecipeData?.prepTimeMins
                   ? `${activeRecipeData.prepTimeMins} mins`
-                  : activeRecipeData.metadata?.prepTime
+                  : activeRecipeData?.metadata?.prepTime
                   ? `${activeRecipeData.metadata.prepTime} mins`
                   : "15 mins",
-              cookTime: activeRecipeData.cookTimeMins
+              cookTime: activeRecipeData?.cookTimeMins
                   ? `${activeRecipeData.cookTimeMins} mins`
-                  : activeRecipeData.metadata?.cookTime
+                  : activeRecipeData?.metadata?.cookTime
                   ? `${activeRecipeData.metadata.cookTime} mins`
                   : "30 mins",
               servings:
-                  activeRecipeData.servings ||
-                  activeRecipeData.metadata?.servings ||
+                  activeRecipeData?.servings ||
+                  activeRecipeData?.metadata?.servings ||
                   4,
               difficulty: "Medium",
               dietaryTags: [
-                  ...(activeRecipeData.diet ||
-                  activeRecipeData.fullRecipe?.diet ||
-                  activeRecipeData.metadata?.diet
+                  ...(activeRecipeData?.diet ||
+                  activeRecipeData?.fullRecipe?.diet ||
+                  activeRecipeData?.metadata?.diet
                       ? [
                             {
                                 emoji: "🥗",
                                 label:
-                                    activeRecipeData.diet ||
-                                    activeRecipeData.fullRecipe?.diet ||
-                                    activeRecipeData.metadata.diet,
+                                    activeRecipeData?.diet ||
+                                    activeRecipeData?.fullRecipe?.diet ||
+                                    activeRecipeData?.metadata?.diet ||
+                                    "",
                             },
-                        ]
+                        ].filter((tag) => tag.label)
                       : []),
-                  ...(activeRecipeData.cuisine ||
-                  activeRecipeData.fullRecipe?.cuisine ||
-                  activeRecipeData.metadata?.cuisine
+                  ...(activeRecipeData?.cuisine ||
+                  activeRecipeData?.fullRecipe?.cuisine ||
+                  activeRecipeData?.metadata?.cuisine
                       ? [
                             {
                                 emoji: "🌍",
                                 label:
-                                    activeRecipeData.cuisine ||
-                                    activeRecipeData.fullRecipe?.cuisine ||
-                                    activeRecipeData.metadata.cuisine,
+                                    activeRecipeData?.cuisine ||
+                                    activeRecipeData?.fullRecipe?.cuisine ||
+                                    activeRecipeData?.metadata?.cuisine ||
+                                    "",
                             },
-                        ]
+                        ].filter((tag) => tag.label)
                       : []),
-                  ...(activeRecipeData.course ||
-                  activeRecipeData.fullRecipe?.course ||
-                  activeRecipeData.metadata?.course
+                  ...(activeRecipeData?.course ||
+                  activeRecipeData?.fullRecipe?.course ||
+                  activeRecipeData?.metadata?.course
                       ? [
                             {
                                 emoji: "🍽️",
                                 label:
-                                    activeRecipeData.course ||
-                                    activeRecipeData.fullRecipe?.course ||
-                                    activeRecipeData.metadata.course,
+                                    activeRecipeData?.course ||
+                                    activeRecipeData?.fullRecipe?.course ||
+                                    activeRecipeData?.metadata?.course ||
+                                    "",
                             },
-                        ]
+                        ].filter((tag) => tag.label)
                       : []),
               ],
           }
@@ -264,15 +325,16 @@ export default function RecipeDetailsPage({
         activeRecipeData?.instructions ||
         activeRecipeData?.metadata?.instructions
             ? parseInstructions(
-                  activeRecipeData.instructions ||
-                      activeRecipeData.metadata.instructions
+                  activeRecipeData?.instructions ||
+                      activeRecipeData?.metadata?.instructions ||
+                      ""
               )
             : activeRecipeData?.title
             ? [
                   `This is a recipe for ${activeRecipeData.title}.`,
                   "The detailed cooking instructions are embedded in our search system but not fully available for display.",
                   "Please refer to the original recipe source for complete step-by-step instructions.",
-                  activeRecipeData.snippet
+                  activeRecipeData?.snippet
                       ? `Recipe preview: ${activeRecipeData.snippet}`
                       : "",
               ].filter(Boolean)

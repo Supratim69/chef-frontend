@@ -188,9 +188,43 @@ class ApiClient {
         return this.makeRequest<ApiResponse<Recipe>>(`/api/recipes/${id}`);
     }
 
-    async getRecipeByUuid(id: string): Promise<Recipe> {
+    async getRecipeByUuid(id: string): Promise<{
+        id: string;
+        title: string;
+        description?: string;
+        imageUrl?: string;
+        ingredients?: string[];
+        instructions?: string;
+        prepTimeMins?: number;
+        cookTimeMins?: number;
+        servings?: number;
+        cuisine?: string;
+        course?: string;
+        diet?: string;
+        tags?: string[];
+        recipeUrl?: string;
+        createdAt?: string;
+        updatedAt?: string;
+    }> {
         console.log("🍽️ API Client - Getting recipe by UUID:", id);
-        return this.makeRequest<Recipe>(`/api/recipe/${id}`);
+        return this.makeRequest<{
+            id: string;
+            title: string;
+            description?: string;
+            imageUrl?: string;
+            ingredients?: string[];
+            instructions?: string;
+            prepTimeMins?: number;
+            cookTimeMins?: number;
+            servings?: number;
+            cuisine?: string;
+            course?: string;
+            diet?: string;
+            tags?: string[];
+            recipeUrl?: string;
+            createdAt?: string;
+            updatedAt?: string;
+        }>(`/api/recipe/${id}`);
     }
 
     // Image upload for ingredient extraction

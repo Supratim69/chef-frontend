@@ -1,6 +1,5 @@
 import React from "react";
 import { Search } from "lucide-react";
-import Illustration from "@/components/ui/Illustration";
 
 interface ActionButtonsProps {
     handleSearch: () => void;

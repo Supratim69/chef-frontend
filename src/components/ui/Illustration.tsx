@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 
 interface IllustrationProps {
     name: string;
@@ -39,7 +40,7 @@ const Illustration: React.FC<IllustrationProps> = ({
     }
 
     return (
-        <img
+        <Image
             src={src}
             alt={alt}
             width={width}

@@ -74,11 +74,7 @@ const FavoriteButton: React.FC<FavoriteButtonProps> = ({
             const response = await apiClient.toggleFavorite(favoriteData);
             setIsFavorited(response.action === "added");
 
-            // Show success message
-            const message =
-                response.action === "added"
-                    ? "Added to favorites!"
-                    : "Removed from favorites";
+            // Success - message could be shown in a toast notification if needed
         } catch (error) {
             console.error("Failed to toggle favorite:", error);
             // You could show an error toast here

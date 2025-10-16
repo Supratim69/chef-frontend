@@ -83,12 +83,6 @@ export default function LoginPage() {
         setShowForgotPassword(false);
     };
 
-    const switchToForgotPassword = () => {
-        setError("");
-        setShowForgotPassword(true);
-        setIsSignUp(false);
-    };
-
     const handleBack = () => {
         router.back();
     };
