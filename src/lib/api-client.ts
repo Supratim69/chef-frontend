@@ -188,6 +188,11 @@ class ApiClient {
         return this.makeRequest<ApiResponse<Recipe>>(`/api/recipes/${id}`);
     }
 
+    async getRecipeByUuid(id: string): Promise<Recipe> {
+        console.log("🍽️ API Client - Getting recipe by UUID:", id);
+        return this.makeRequest<Recipe>(`/api/recipe/${id}`);
+    }
+
     // Image upload for ingredient extraction
     async uploadImage(file: File): Promise<{
         ingredients: string[];
